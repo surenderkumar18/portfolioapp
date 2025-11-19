@@ -579,7 +579,7 @@ function runDeliveryAnalyzer() {
 		const COLORS = {
 			// Core signals — smooth / professional
 			green:      "#388E3C",   // 🟢 strong long (your requested tone)
-			red:        "#D84315",   // 🔴 soft red (not harsh)
+			red:        "#c8062e",   // 🔴 soft red (not harsh)
 			orange:     "#FB8C00",   // 🟠 soft unwinding / caution
 			cyan:       "#039BE5",   // 🔵 smooth blue, non-distracting
 
@@ -591,7 +591,9 @@ function runDeliveryAnalyzer() {
 			priceUp:    "#9575CD",   // 📈 soft violet for uptrend
 			neutral:    "#9e9e9e",   // ⚪ neutral gray
 			empty:      "#363636",   // ▒ dark gray empty block (subtle)
-			breakout:   "#00C853"    // 🚀 calm neon green for breakout
+			breakout:   "#00C853",    // 🚀 calm neon green for breakout  
+			greenBar:   "#13814b",
+			redBar:     "#c8062e",
 		};
 
 
@@ -614,12 +616,12 @@ function runDeliveryAnalyzer() {
 
 	  console.log(
 		  `%c${STOCK_NAME}%c ::::::  SMART OI Analyzer `,
-		  "color:#ff6b6b; font-size:26px; font-weight:900;",
+		  "color:#00bcd4; font-size:26px; font-weight:900;",
 		  "color:#80d8ff; font-size:14px; font-weight:bold;"
 		);
 
 	  console.log(
-  "%cDate   │ OI Bar & Qty                                │ Δ OI       │ Delta       │ Price Bar                                  │ Price    │ % Chng   │ Score     │ Smart Signal   │ Action │ Entry  │ Warn  │ OI Cr                                ", "background:#1d1d1d; color:#e0e0e0; font-size:14px; font-weight:bolder; padding:4px 2px;"
+  "%cDate   │ OI Bar & Qty                                 │ Δ OI       │ Delta       │ Price Bar                                   │ Price    │ % Chng    │ Score      │ Smart Signal   │ Action │ Entry  │ Warn  │ OI Cr                                ", "background:#1d1d1d; color:#e0e0e0; font-size:14px; font-weight:bolder; padding:4px 2px;"
 );
 
 	  //console.log("─".repeat(240));
@@ -693,8 +695,8 @@ function runDeliveryAnalyzer() {
 		const oiEmptyBar = BAR.repeat(TOTAL_BAR_LEN_OI - oiFill);
 		// Soft bar color mapping
 		let barColor = COLORS.green; // default
-		if (priceChange > 0 && oiChangeQty > 0) barColor = COLORS.green;      // Fresh Longs
-		else if (priceChange < 0 && oiChangeQty > 0) barColor = COLORS.red;   // Fresh Shorts
+		if (priceChange > 0 && oiChangeQty > 0) barColor = COLORS.greenBar;      // Fresh Longs
+		else if (priceChange < 0 && oiChangeQty > 0) barColor = COLORS.redBar;   // Fresh Shorts
 		else if (priceChange > 0 && oiChangeQty < 0) barColor = COLORS.cyan;  // Short Covering
 		else if (priceChange < 0 && oiChangeQty < 0) barColor = COLORS.orange;// Long Unwinding
 
@@ -727,11 +729,11 @@ function runDeliveryAnalyzer() {
 		let priceValStyle       = `color:${COLORS.neutral};font-weight:bold;font-family:monospace;`;
 
 		if (priceVal > prevPriceRow) {
-			priceBarFilledStyle = `color:${COLORS.green};font-weight:bold;`;
+			priceBarFilledStyle = `color:${COLORS.greenBar};font-weight:bold;`;
 			priceValStyle       = `color:${COLORS.green};font-weight:bold;font-family:monospace;`;
 		} 
 		else if (priceVal < prevPriceRow) {
-			priceBarFilledStyle = `color:${COLORS.red};font-weight:bold;`;
+			priceBarFilledStyle = `color:${COLORS.redBar};font-weight:bold;`;
 			priceValStyle       = `color:${COLORS.red};font-weight:bold;font-family:monospace;`;
 		}
 
@@ -817,14 +819,14 @@ function runDeliveryAnalyzer() {
 		  `%c${dateFormatted} ` +               // 1 dateStyle
 		  `%c${borderRight} ` +
 		  `%c${oiFilledBar}%c${oiEmptyBar} ` +            // 2 oiBarStyle, 3 oiEmptyStyle
-		  `%c${oiQtyText} │ ` +                          // 4 oiQtyStyle
+		  `%c ${oiQtyText} │ ` +                          // 4 oiQtyStyle
 		  `%c${oiDeltaQtyText}` +                     // 5 oiDeltaQtyStyle
 		  `%c${borderRight}` +  
-		  `%c${priceFilledBar}%c${priceEmptyBar} ` +     // 6 priceBarFilledStyle, 7 priceEmptyStyle
-	      `%c${priceStr.padEnd(12)} │` +                // 8 priceValStyle
-		  `%c${pricePctStr.padEnd(12)}` +  
+		  `%c ${priceFilledBar}%c${priceEmptyBar} ` +     // 6 priceBarFilledStyle, 7 priceEmptyStyle
+	      `%c ${priceStr.padEnd(12)} │` +                // 8 priceValStyle
+		  `%c ${pricePctStr.padEnd(12)}` +  
 		  `%c${borderRight}` + 		  // 9 price% soft grey
-		  `%c${scoreStr.padEnd(12)} │ ` +                 //10 scoreColor
+		  `%c ${scoreStr.padEnd(12)} │ ` +                 //10 scoreColor
 		  `%c${smartSignal.padEnd(16)} │ ` +              //11 smartColor
 		  `%c${action.padEnd(8)} │ ` +                    //12 actionColor
 		  `%c${entry.padEnd(8)} │ ` +                     //13 entryColor
