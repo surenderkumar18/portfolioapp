@@ -34,20 +34,29 @@ function rolloverBarChart() {
   function formatIndian(num) {
     if (!isFinite(num)) return "-";
 
-    const x = num.toString().split(".");
-    let int = x[0];
-    const dec = x.length > 1 ? "." + x[1] : "";
+    // Correct Indian comma formatting:
+    // 12345678 → 1,23,45,678
+    const int = num.toString();
+    const last3 = int.slice(-3);
+    const other = int.slice(0, -3);
 
-    // Indian number formatting
-    int = int.replace(/\B(?=(\d{2})+(?!\d))/g, ",");
+    let formatted = "";
+    if (other !== "")
+      formatted = other.replace(/\B(?=(\d{2})+(?!\d))/g, ",") + "," + last3;
+    else
+      formatted = last3;
 
-    // Convert to Cr / Lac
+    // Convert to Cr/Lac with correct decimal
     let suffix = "";
-    if (num >= 1e7) suffix = ` (${(num / 1e7).toFixed(2)} Cr)`;
-    else if (num >= 1e5) suffix = ` (${(num / 1e5).toFixed(2)} Lac)`;
+    if (num >= 1e7) {
+      suffix = ` (${(num / 1e7).toFixed(2)} Cr)`;
+    } else if (num >= 1e5) {
+      suffix = ` (${(num / 1e5).toFixed(2)} Lac)`;
+    }
 
-    return int + suffix;
+    return formatted + suffix;
   }
+
 
     // =======================================
   const data = rolloverData[symbol];
