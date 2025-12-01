@@ -182,28 +182,53 @@ rolloverBarChart();
   
 */
 // ==================================================================================
+// ==================================================================================
+// Final Delivery & Futures OI Analyzer (EMA fully integrated)
+// ==================================================================================
 
-
+/* Paste this whole file into console (replacing previous analyzer) */
 
 // ========= Detect active symbol (attempt)
-  function getActiveSymbol() {
-    try {
-      const tabs = document.querySelectorAll(
-        ".top_tab_parent .draggable_top_bar .top_bar .w-100"
-      );
-      for (const tab of tabs) {
-        const a = tab.querySelector(".top_bar_item.active a");
-        if (a && a.textContent.trim())
-          return a.textContent.trim().toUpperCase();
-      }
-    } catch (e) {
-      /* ignore */
+function getActiveSymbol() {
+  try {
+    const tabs = document.querySelectorAll(
+      ".top_tab_parent .draggable_top_bar .top_bar .w-100"
+    );
+    for (const tab of tabs) {
+      const a = tab.querySelector(".top_bar_item.active a");
+      if (a && a.textContent.trim()) return a.textContent.trim().toUpperCase();
     }
-    return null;
+  } catch (e) {
+    /* ignore */
   }
+  return null;
+}
 
+/* =========================
+   EMA helper (TradingView-accurate)
+   - computes EMA in-place on `rows`
+   - expects rows ordered newest-first (index 0 newest), but our rows are already
+     in that order (Object.entries insertion order). We'll compute EMA starting
+     from the oldest row so it behaves like common EMA implementations.
+   ========================= */
+function computeEMA(rows, period) {
+  if (!rows || rows.length === 0) return;
+  const k = 2 / (period + 1);
+
+  // find the oldest price as starting EMA seed
+  // rows[rows.length - 1] is oldest
+  let emaPrev = rows[rows.length - 1].price || 0;
+
+  // iterate from oldest to newest and compute EMA incrementally
+  for (let i = rows.length - 1; i >= 0; i--) {
+    const price = rows[i].price || emaPrev;
+    emaPrev = price * k + emaPrev * (1 - k);
+    rows[i]["EMA" + period] = emaPrev;
+  }
+}
+
+// ---------- createFutureDataJSON (unchanged logic except OIValue already present) ----------
 function createFutureDataJSON() {
-  // ========= Read futures table rows once
   const rows = Array.from(
     document.querySelectorAll(
       '.futures-table .ag-center-cols-container [role="row"]'
@@ -221,26 +246,13 @@ function createFutureDataJSON() {
     return isFinite(n) ? n : 0;
   };
 
-  // Convert "03-11-2025" → "03 Nov 2025"
   const formatDate = (dmy) => {
     if (!dmy.includes("-")) return dmy;
-
     const [d, m, y] = dmy.split("-");
     const months = [
-      "Jan",
-      "Feb",
-      "Mar",
-      "Apr",
-      "May",
-      "Jun",
-      "Jul",
-      "Aug",
-      "Sep",
-      "Oct",
-      "Nov",
-      "Dec",
+      "Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"
     ];
-    return `${d} ${months[parseInt(m) - 1]} ${y}`;
+    return `${d} ${months[parseInt(m)-1]} ${y}`;
   };
 
   const pick = (row, colSel) =>
@@ -248,29 +260,19 @@ function createFutureDataJSON() {
     row.querySelector(colSel)?.textContent ??
     "0";
 
-  // =========================================
-  // BUILD EXACT STRUCTURE:
-  // { "ASHOKLEY": { "27 Nov 2025": {...}, ... } }
-  // =========================================
-
   const dataByDate = {};
 
   rows.forEach((row) => {
-    const rawDate = (
-      row.querySelector('[col-id="date"]')?.textContent || ""
-    ).trim();
+    const rawDate = (row.querySelector('[col-id="date"]')?.textContent || "").trim();
     if (!rawDate) return;
-
     const dateStr = formatDate(rawDate);
 
     const premium = cleanNum(pick(row, '[col-id="month1close"]'));
     const premiumChange = cleanNum(pick(row, '[col-id="month1changePerc"]'));
     const Oi = cleanNum(pick(row, '[col-id="month1combinedOi"]'));
-    const OiChangePerc = cleanNum(
-      pick(row, '[col-id="month1combinedOiChangePerc"]')
-    );
+    const OiChangePerc = cleanNum(pick(row, '[col-id="month1combinedOiChangePerc"]'));
 
-    // ✅ Add OIValue in Crores
+    // OIValue in Crores
     const OIValue = (Oi * premium) / 1e7;
 
     dataByDate[dateStr] = {
@@ -278,58 +280,33 @@ function createFutureDataJSON() {
       premiumChange,
       Oi,
       OiChangePerc,
-      OIValue,
+      OIValue
     };
   });
 
-  
-
-  // ---------- pick symbol & rollover object (if you use rollover map externally)
   let symbol = getActiveSymbol();
-
-  // wrap inside symbol object
-  let futdata = {
-    [symbol]: dataByDate,
-  };
-
-  // Log futures list
-  const futuresDataString = JSON.stringify(futdata);
-  //console.log(futuresDataString);
-
-  //console.log("✔ FUTURES DATA FINAL STRUCTURE:", futuresData);
-
+  let futdata = { [symbol]: dataByDate };
   return futdata;
 }
-/*
-let futuresData = 
-{"ASHOKLEY":{
-        "28 Nov 2025":{"premium":157,"premiumChange":0.13,"Oi":129710000,"OiChangePerc":1.06},
-        "27 Nov 2025":{"premium":156.8,"premiumChange":4.51,"Oi":128345000,"OiChangePerc":10.3},
-        "26 Nov 2025":{"premium":150.04,"premiumChange":2.76,"Oi":116355000,"OiChangePerc":-7.61}
-    }
-}
 
-*/
-
-// USAGE:
+// USAGE: build combined (your deliveryData must exist)
 let futuresData = createFutureDataJSON();
 
 function mergeDeliveryAndFuturesData(deliveryData, futuresData) {
-  //const symbol = Object.keys(deliveryData)[0]; // "ASHOKLEY"
   let symbol = getActiveSymbol();
   const finalObj = { [symbol]: {} };
   const deliveryDates = deliveryData[symbol];
   const futureDates = futuresData[symbol] || {};
-  // --- Merge both datasets date-wise ---
+
   const allDates = new Set([
-    ...Object.keys(deliveryDates),
-    ...Object.keys(futureDates),
+    ...Object.keys(deliveryDates || {}),
+    ...Object.keys(futureDates || {}),
   ]);
 
   allDates.forEach((date) => {
     finalObj[symbol][date] = {
-      ...futureDates[date], // premium, OI...
-      ...deliveryDates[date], // price, deliveryQty...
+      ...futureDates[date],
+      ...deliveryDates[date]
     };
   });
 
@@ -338,28 +315,18 @@ function mergeDeliveryAndFuturesData(deliveryData, futuresData) {
 
 let combined = mergeDeliveryAndFuturesData(deliveryData, futuresData);
 
-// Log combined list
-const mergeDeliveryAndFuturesDataString = JSON.stringify(combined);
-//console.log("FINAL COMBINED:", mergeDeliveryAndFuturesDataString);
-
-
 // =============================================================================================================================
-// runDeliveryAnalyzer  — using `combined` data with Delivery + Futures
-// Adds two columns at the END: Confidence (%) and Risk (LOW/MEDIUM/HIGH color label)
+// createDeliveryAndFutureOIAnalyzer  — EMA integrated, score + confidence fixed
 // =============================================================================================================================
 function createDeliveryAndFutureOIAnalyzer() {
-  
+  console.clear();
 
   // ---- 5 DAY ROLLING AVERAGE HELPER ----
   function fiveDayAvg(arr, idx, key) {
-    let count = 0,
-      sum = 0;
+    let count = 0, sum = 0;
     for (let i = idx; i < idx + 5 && i < arr.length; i++) {
       const v = Number(arr[i][key]) || 0;
-      if (v > 0) {
-        sum += v;
-        count++;
-      }
+      if (v !== 0) { sum += v; count++; }
     }
     return count ? sum / count : 0;
   }
@@ -371,9 +338,8 @@ function createDeliveryAndFutureOIAnalyzer() {
     VALUE_BAR_LEN: 50,
     PRICE_BAR_LEN: 25,
     OIVALUE_BAR_LEN: 50,
-
-    FONT_SIZES: [10, 12, 14, 18, 22, 28, 32, 36],
-    PRICE_MINI_BAR_LEN: 6,
+    FONT_SIZES: [10,12,14,18,22,28,32,36],
+    PRICE_MINI_BAR_LEN: 6
   };
 
   // =========================
@@ -381,380 +347,264 @@ function createDeliveryAndFutureOIAnalyzer() {
   // =========================
   const cleanNum = (v) => {
     const s = String(v ?? "").replace(/[^0-9.-]/g, "");
-    const n = parseFloat(s);
-    return isFinite(n) ? n : 0;
+    const n = parseFloat(s); return isFinite(n) ? n : 0;
   };
-
   const fmtCr = (n) => `₹${Number(n).toFixed(2)} Cr`;
-  const fmtNumIN = (n) => {
-    try {
-      return Math.abs(n).toLocaleString("en-IN");
-    } catch {
-      return String(n);
-    }
-  };
+  const fmtNumIN = (n) => { try { return Math.abs(n).toLocaleString('en-IN'); } catch { return String(n); } };
 
   // =========================
   // READ COMBINED DATA
   // =========================
   const symbol = Object.keys(combined)[0];
-  let rows = Object.entries(combined[symbol]).map(([date, obj]) => ({
-    DATE: date,
-    ...obj,
-  }));
+  let rows = Object.entries(combined[symbol] || {}).map(([date,obj]) => ({ DATE: date, ...obj }));
 
-  if (!rows.length) {
-    console.error("❌ No rows in COMBINED object for:", symbol);
-    return;
-  }
+  // 🔥 FIX: Always sort by date (newest first)
+  rows.sort((a, b) => new Date(b.DATE) - new Date(a.DATE));
+
+  if (!rows.length) { console.error("❌ No rows in COMBINED object for:", symbol); return; }
 
   // =========================
-  // NORMALIZE & COMPUTE
+  // NORMALIZE & COMPUTE (price, delQty, etc.)
   // =========================
   rows = rows.map((r) => {
     const price = cleanNum(r.price);
     const delQty = cleanNum(r.deliveryQty);
     const delPct = cleanNum(r.deliveryPerc);
     const premium = cleanNum(r.premium);
-    const OIValue = cleanNum(r.OIValue); // already in Cr
-
-    const deliveryValue = (delQty * price) / 1e7; // in Cr
+    const OIValue = cleanNum(r.OIValue);
+    const deliveryValue = (delQty * price) / 1e7;
     const changePct = cleanNum(r.changePct || 0);
-
-    return {
-      ...r,
-      price,
-      delQty,
-      delPct,
-      premium,
-      OIValue,
-      deliveryValue,
-      changePct,
-    };
+    return { ...r, price, delQty, delPct, premium, OIValue, deliveryValue, changePct };
   });
+
+  // =========================
+  // COMPUTE EMAs (need prices present)
+  // =========================
+  computeEMA(rows, 8);
+  computeEMA(rows, 17);
+  computeEMA(rows, 34);
 
   // =========================
   // 5-DAY ROLLING AVERAGES
   // =========================
   for (let i = 0; i < rows.length; i++) {
-    const window = rows.slice(i, i + 5); // 5 rows
-
-    const avg = (arr, fn) => arr.reduce((s, x) => s + fn(x), 0) / arr.length;
-
-    rows[i].avgPrice5 = avg(window, (r) => r.price || 0);
-    rows[i].avgDelPct5 = avg(window, (r) => r.delPct || 0);
-    rows[i].avgDelVal5 = avg(window, (r) => r.deliveryValue || 0);
-    rows[i].avgPremium5 = avg(window, (r) => r.premium || 0);
-    rows[i].avgOIValue5 = avg(window, (r) => r.OIValue || 0);
+    const window = rows.slice(i, i+5);
+    const avg = (arr, fn) => arr.reduce((s,x) => s + fn(x), 0) / arr.length;
+    rows[i].avgPrice5   = avg(window, r => r.price || 0);
+    rows[i].avgDelPct5  = avg(window, r => r.delPct || 0);
+    rows[i].avgDelVal5  = avg(window, r => r.deliveryValue || 0);
+    rows[i].avgPremium5 = avg(window, r => r.premium || 0);
+    rows[i].avgOIValue5 = avg(window, r => r.OIValue || 0);
   }
 
-  // filter-out rows with price == 0 from ranges but keep them in rows array for display (you asked earlier to skip zero-price only for min calc)
-  const pricedRows = rows.filter((r) => r.price > 0);
+  // filter-out price==0 rows for min calc
+  const pricedRows = rows.filter(r => r.price > 0);
 
   // basic ranges
-  const maxDelValue = Math.max(...rows.map((r) => r.deliveryValue || 0), 1);
-  const maxPrice = Math.max(...rows.map((r) => r.price || 0), 1);
-  const minPrice = Math.min(...pricedRows.map((r) => r.price), maxPrice || 1); // ignore zero priced rows for min
-  const maxOIValue = Math.max(...rows.map((r) => r.OIValue || 0), 1);
+  const maxDelValue = Math.max(...rows.map(r => r.deliveryValue || 0), 1);
+  const maxPrice = Math.max(...rows.map(r => r.price || 0), 1);
+  const minPrice = Math.min(...pricedRows.map(r => r.price), maxPrice || 1);
+  const maxOIValue = Math.max(...rows.map(r => r.OIValue || 0), 1);
 
-  // =========================
-  // maxPremium, minPremium
-  // =========================
-  const maxPremium = Math.max(...rows.map((r) => r.premium || 0), 1);
-  const minPremium = Math.min(...rows.map(r => r.premium).filter(p => p > 0));
+  // premium min/max
+  const maxPremium = Math.max(...rows.map(r => r.premium || 0), 1);
+  //const minPremium = Math.min(...rows.map(r => r.premium).filter(p => p > 0), 1);
+    const minPremium = Math.min(...rows.map(r => r.premium).filter(p => p > 0));
 
-  // =========================
-  // BAR FUNCTIONS
-  // =========================
-  const BAR_FILLED = "█";
-  const BAR_EMPTY = " ";
-
+  // bar helpers
+  const BAR_FILLED = "█", BAR_EMPTY = " ";
   function linearBar(val, maxv, len) {
     const ratio = Math.max(0, Math.min(1, val / (maxv || 1)));
     const filled = Math.round(ratio * len);
     return BAR_FILLED.repeat(filled) + BAR_EMPTY.repeat(len - filled);
   }
 
-  // =========================
-  // COLORS
-  // =========================
+  // colors
   const COLORS = {
-    green: "#13814b",
-    softGreen: "#66BB6A",
-    red: "#c8062e",
-    softRed: "#EF9A9A",
-    neutral: "#9e9e9e",
-    empty: "#363636",
-    darkBg: "#1d1d1d",
-    amberSoft: "#D9A441",
-    black: "#282828",
-    white: "#ffffff",
-    yellow: "#D9A441", // reuse amber as yellowish
-    softBlue: "#3867a9",
-    purple: "#b050ff"
-
+    green: "#13814b", softGreen: "#66BB6A", red: "#c8062e", softRed: "#EF9A9A",
+    neutral: "#9e9e9e", empty: "#363636", darkBg: "#1d1d1d", amberSoft: "#D9A441",
+    black: "#282828", white: "#ffffff", yellow: "#D9A441", softBlue: "#3867a9", purple: "#b050ff", lightGray: "#e7e4e4"
   };
 
-  // =========================
-  // HEADER
-  // =========================
+  // header
   const TITLE = `${symbol}`;
-
   console.log(
     `%c${TITLE}%c ::::::  %cDELIVERY & FUTURES OI ANALYZER`,
     `color:#00bcd4; font-size:26px; font-weight:900;  padding:10px 0px;`,
     `color:${COLORS.white}; font-size:18px; font-weight:bold;`,
-    `color:${COLORS.purple}; font-size:22px; font-weight:bold;`,
+    `color:${COLORS.purple}; font-size:22px; font-weight:bold;`
   );
 
   const heading =
-    "Date".padEnd(9) +
-    "│ " +
-    "DelQty".padEnd(11) +
-    "│ " +
-    "Price".padEnd(8) +
-    "│ " +
-    "%Chg".padEnd(6) +
-    "│ " +
-    "Price Bar".padEnd(19) +
-    "│ " +
-    "  Del%".padEnd(9) +
-    "│ " +
-    "Delivery Value Bar (₹ Cr)".padEnd(38) +
-    "│ " +
-    "Price/DelValue/Premium/OiValue".padEnd(34) +
-    "│ " +
-    "Premium Bar".padEnd(18) +
-    "│ " +
-    "Prem".padEnd(5) +
-    "│ " +
-    "%Chg".padEnd(6) +
-    "│ " +
-    "OI Value Bar".padEnd(38) +
-    "│ " +
-    "Val(Δ)".padEnd(28) +
-    "│ " +
-    "Signal".padEnd(28);
+    "Date".padEnd(9) + "│ " +
+    "DelQty".padEnd(11) + "│ " +
+    "Price".padEnd(8) + "│ " +
+    "%Chg".padEnd(6) + "│ " +
+    "Price Bar".padEnd(19) + "│ " +
+    "  Del%".padEnd(9) + "│ " +
+    "Delivery Value Bar (₹ Cr)".padEnd(38) + "│ " +
+    "Price/DelValue/Premium/OiValue".padEnd(34) + "│ " +
+    "Premium Bar".padEnd(18) + "│ " +
+    "Prem".padEnd(5) + "│ " +
+    "%Chg".padEnd(6) + "│ " +
+    "OI Value Bar".padEnd(38) + "│ " +
+    "Val(Δ)".padEnd(29) + "│ " +
+    "Score".padEnd(6) + "│ " +
+    "Conf".padEnd(7)  + "│ " +
+    "Signal".padEnd(14);
 
-  console.log(
-    `%c${heading}`,
-    `background:${COLORS.darkBg}; color:#e0e0e0; font-size: 16px; font-weight:bold; padding:6px 2px;`
-  );
+  console.log(`%c${heading}`, `background:${COLORS.darkBg}; color:#e0e0e0; font-size: 16px; font-weight:bold; padding:6px 2px;`);
 
-  // =========================
-  // MAIN LOOP
-  // =========================
+  // main loop
   for (let idx = 0; idx < rows.length; idx++) {
     const r = rows[idx];
-    const prev = rows[idx + 1] ?? r;
+    const prev = rows[idx+1] ?? r;
 
-    // ---- 5 DAY AVERAGES ----
+    // ---- 5 DAY AVERAGES quick variables
     const avg5_price = fiveDayAvg(rows, idx, "price");
     const avg5_deliveryValue = fiveDayAvg(rows, idx, "deliveryValue");
     const avg5_OIValue = fiveDayAvg(rows, idx, "OIValue");
     const avg5_premium = fiveDayAvg(rows, idx, "premium");
 
+    // normalize-based scores for finalScore calculation
     function normalize(val) {
       if (val > 0.1) return 1;
       if (val < -0.1) return -1;
-      return val / 0.1; // scale between -1 to 1
+      return val / 0.1;
     }
+    const priceScoreNorm = normalize((r.price - avg5_price) / (avg5_price || 1));
+    const delScoreNorm = normalize((r.deliveryValue - avg5_deliveryValue) / (avg5_deliveryValue || 1));
+    const oiScoreNorm = normalize((r.OIValue - avg5_OIValue) / (avg5_OIValue || 1));
+    const premScoreNorm = normalize((r.premium - avg5_premium) / (avg5_premium || 1));
 
-    // Avoid divide-by-zero
-    const priceScore = normalize((r.price - avg5_price) / (avg5_price || 1));
-    const delScore = normalize(
-      (r.deliveryValue - avg5_deliveryValue) / (avg5_deliveryValue || 1)
-    );
-    const oiScore = normalize((r.OIValue - avg5_OIValue) / (avg5_OIValue || 1));
-    const premScore = normalize(
-      (r.premium - avg5_premium) / (avg5_premium || 1)
-    );
+    const finalScore = 0.4 * oiScoreNorm + 0.3 * delScoreNorm + 0.2 * priceScoreNorm + 0.1 * premScoreNorm;
 
-    const finalScore =
-      0.4 * oiScore + 0.3 * delScore + 0.2 * priceScore + 0.1 * premScore;
+    // EMA trend
+    const emaTrendUp = (r.EMA8 > r.EMA17 && r.EMA17 > r.EMA34);
+    const emaTrendDown = (r.EMA8 < r.EMA17 && r.EMA17 < r.EMA34);
 
-    const finalScorePercent = Math.round(finalScore * 100);
+    // give small EMA bonus
+    const emaBonus = emaTrendUp ? 0.1 : (emaTrendDown ? -0.1 : 0);
+    const finalScoreAdjusted = finalScore + emaBonus;
+    const finalScorePercent = Math.round(finalScoreAdjusted * 100);
 
-    // ========= Bars
-    // ===== PRICE BAR (Correct Logic) =====
+    // ===== Bars (price/premium use same logic)
     let priceBar;
-    {
+    if (!r.price || r.price === 0) {
+        // Missing price → light gray empty bar
+        priceBar = "░".repeat(SETTINGS.PRICE_BAR_LEN);
+    } else {
         const range = maxPrice - minPrice || 1;
-        const ratio  = (r.price - minPrice) / range;
+        const ratio = (r.price - minPrice) / range;
         const filled = Math.max(0, Math.round(ratio * SETTINGS.PRICE_BAR_LEN));
-        const empty  = SETTINGS.PRICE_BAR_LEN - filled;
-
+        const empty = SETTINGS.PRICE_BAR_LEN - filled;
         priceBar = "█".repeat(filled) + "░".repeat(empty);
     }
 
-    // ===== PREMIUM BAR (Now EXACT SAME LOGIC) =====
+
     let premiumBar;
     {
-        const range = maxPremium - minPremium || 1;
-        const ratio  = (r.premium - minPremium) / range;
-        const filled = Math.max(0, Math.round(ratio * SETTINGS.PRICE_BAR_LEN));
-        const empty  = SETTINGS.PRICE_BAR_LEN - filled;
-
-        premiumBar = "█".repeat(filled) + "░".repeat(empty);
+      const range = maxPremium - minPremium || 1;
+      const ratio = (r.premium - minPremium) / range;
+      const filled = Math.max(0, Math.round(ratio * SETTINGS.PRICE_BAR_LEN));
+      const empty = SETTINGS.PRICE_BAR_LEN - filled;
+      premiumBar = "█".repeat(filled) + "░".repeat(empty);
     }
 
+   let delValBar;
+    if (!r.deliveryValue || r.deliveryValue === 0) {
+        // No delivery → light gray empty bar
+        delValBar = "░".repeat(SETTINGS.VALUE_BAR_LEN);
+    } else {
+        // Normal delivery bar
+        delValBar = linearBar(
+            r.deliveryValue,
+            maxDelValue,
+            SETTINGS.VALUE_BAR_LEN
+        );
+    }
 
-    const delValBar = linearBar(
-      r.deliveryValue,
-      maxDelValue,
-      SETTINGS.VALUE_BAR_LEN
-    );
-    const oiValueBar = linearBar(
-      r.OIValue,
-      maxOIValue,
-      SETTINGS.OIVALUE_BAR_LEN
-    );
+    const oiValueBar = linearBar(r.OIValue, maxOIValue, SETTINGS.OIVALUE_BAR_LEN);
 
-    // ========= Value + delta
+    // Value + delta
     const delValCr = r.deliveryValue;
     const prevValCr = prev.deliveryValue || 0;
     const deltaCr = delValCr - prevValCr;
     const delValCrStr = String(fmtCr(delValCr)).padEnd(12);
-    const deltaCrStr = (deltaCr >= 0 ? "+" : "-") + fmtCr(Math.abs(deltaCr));
+    const OIValCrStr = fmtCr(r.OIValue).padEnd(12);
 
-    // ========= Dynamic font for delivery value
+    // dynamic font
     const pctOfMax = delValCr / maxDelValue;
     let fontIdx = 0;
-
     if (pctOfMax >= 0.92) fontIdx = 7;
     else if (pctOfMax >= 0.78) fontIdx = 6;
     else if (pctOfMax >= 0.62) fontIdx = 5;
     else if (pctOfMax >= 0.48) fontIdx = 4;
     else if (pctOfMax >= 0.34) fontIdx = 3;
-    else if (pctOfMax >= 0.2) fontIdx = 2;
-    else if (pctOfMax >= 0.1) fontIdx = 1;
+    else if (pctOfMax >= 0.20) fontIdx = 2;
+    else if (pctOfMax >= 0.10) fontIdx = 1;
     else fontIdx = 0;
-
     const fontSize = SETTINGS.FONT_SIZES[fontIdx];
 
-    const OIValCrStr = fmtCr(r.OIValue).padEnd(12);
-
-    // =========================
-    // SIGNAL LOGIC
-    // =========================
+    // SIGNAL logic (now EMA-aware)
     let signal = "HOLD ➖";
-
     const priceUp = r.price > prev.price;
     const priceDown = r.price < prev.price;
-
     const premiumUp = r.premium > prev.premium;
     const premiumDown = r.premium < prev.premium;
-
     const oiUp = r.OIValue > prev.OIValue;
     const oiDown = r.OIValue < prev.OIValue;
+    const deliveryStrong = r.delPct >= 40 || r.deliveryValue >= maxDelValue * 0.4;
 
-    const deliveryStrong =
-      r.delPct >= 40 || r.deliveryValue >= maxDelValue * 0.4;
-
-    if (priceUp && oiUp && premiumUp && deliveryStrong) {
+    if (emaTrendUp && priceUp && oiUp && premiumUp && deliveryStrong) {
       signal = "BUY 🔥";
-    } else if (deliveryStrong && oiUp) {
+    } else if ((emaTrendUp || deliveryStrong) && oiUp) {
       signal = "ACCUMULATE 🟧";
-    } else if (priceDown && oiDown && premiumDown) {
+    } else if (emaTrendDown && priceDown && oiDown && premiumDown) {
       signal = "SELL 🚨";
     }
 
+    // scoreSignal from finalScorePercent (kept similar mapping)
     let scoreSignal = "";
-
     if (finalScorePercent >= 60) scoreSignal = "BUY 🔥";
     else if (finalScorePercent >= 25) scoreSignal = "ACCUMULATE 🟧";
     else if (finalScorePercent > -25) scoreSignal = "HOLD ➖";
     else if (finalScorePercent > -60) scoreSignal = "LIGHT SELL ⚠️";
     else scoreSignal = "SELL 🚨";
 
-    // =========================
-    // CONFIDENCE SCORE (0-100)
-    // Weighted:
-    // Price Trend = 20
-    // Premium Trend = 20
-    // OI Trend = 25
-    // Delivery% strength = 20
-    // DeliveryValue strength = 15
-    // =========================
-
+    // CONFIDENCE calculation (fixed: derive priceScore & oiScore from averages)
+    const priceScore_bool = (r.price > r.avgPrice5) ? 20 : 0;
     const premiumScore = premiumUp ? 20 : 0;
-    const delPctScore = Math.min(20, (r.delPct / 40) * 20); // scale to 0-20 (40% -> full)
-    const delValScore = Math.min(
-      15,
-      (r.deliveryValue / (maxDelValue || 1)) * 15
-    ); // scale 0-15
+    const oiScore_bool = (r.OIValue > r.avgOIValue5) ? 25 : 0;
+    const delPctScore = Math.min(20, (r.delPct / 40) * 20);
+    const delValScore = Math.min(15, (r.deliveryValue / (maxDelValue || 1)) * 15);
 
-    const rawConfidence =
-      priceScore + premiumScore + oiScore + delPctScore + delValScore;
+    const rawConfidence = priceScore_bool + premiumScore + oiScore_bool + delPctScore + delValScore;
     const confidence = Math.round(Math.max(0, Math.min(100, rawConfidence)));
 
-    // =========================
-    // RISK LABEL (LOW / MEDIUM / HIGH) as color label
-    // Simple rule using trend alignment and confidence:
-    // trendScore = number of positive trends (priceUp, premiumUp, oiUp, deliveryStrong)
-    // 4 => LOW, 3 => MEDIUM, <=2 => HIGH
-    // Also bump to LOW if confidence >= 80 and trendScore >= 3
-    // =========================
-    const trendScore =
-      (priceUp ? 1 : 0) +
-      (premiumUp ? 1 : 0) +
-      (oiUp ? 1 : 0) +
-      (deliveryStrong ? 1 : 0);
+    // Risk label
+    const trendScore = (priceUp ? 1 : 0) + (premiumUp ? 1 : 0) + (oiUp ? 1 : 0) + (deliveryStrong ? 1 : 0);
+    let riskLabel = "HIGH", riskColor = COLORS.red;
+    if (trendScore === 4 || (confidence >= 80 && trendScore >= 3)) { riskLabel = "LOW"; riskColor = COLORS.green; }
+    else if (trendScore === 3 || confidence >= 60) { riskLabel = "MEDIUM"; riskColor = COLORS.yellow; }
+    else { riskLabel = "HIGH"; riskColor = COLORS.red; }
 
-    let riskLabel = "HIGH";
-    let riskColor = COLORS.red;
-
-    if (trendScore === 4 || (confidence >= 80 && trendScore >= 3)) {
-      riskLabel = "LOW";
-      riskColor = COLORS.green;
-    } else if (trendScore === 3 || confidence >= 60) {
-      riskLabel = "MEDIUM";
-      riskColor = COLORS.yellow;
-    } else {
-      riskLabel = "HIGH";
-      riskColor = COLORS.red;
-    }
-
-    // ===================================
-    // DELIVERY % COLOR LOGIC (No Errors)
-    // ===================================
-    let delColor = COLORS.softBlue; // default neutral
-
+    // Delivery % color logic (kept same)
+    let delColor = COLORS.softBlue;
     const delPctUp = r.delPct > r.avgDelPct5;
     const delValUp = r.deliveryValue > r.avgDelVal5;
+    if (delPctUp && delValUp && r.deliveryValue > 0.40 * maxDelValue) delColor = COLORS.green;
+    else if (delPctUp && r.deliveryValue > 0.75 * r.avgDelVal5) delColor = COLORS.amberSoft;
+    else if (!delPctUp && !delValUp) delColor = COLORS.red;
+    else if (r.delPct > 50 && r.deliveryValue < 0.20 * r.avgDelVal5) delColor = COLORS.red;
+    else delColor = COLORS.softBlue;
 
-    // STRONG ACCUMULATION (GREEN)
-    if (delPctUp && delValUp && r.deliveryValue > 0.40 * maxDelValue) {
-        delColor = COLORS.green;
-    }
-    // MODERATE ACCUMULATION (AMBER)
-    else if (delPctUp && r.deliveryValue > 0.75 * r.avgDelVal5) {
-        delColor = COLORS.amberSoft;
-    }
-    // WEAK DELIVERY / DISTRIBUTION (RED)
-    else if (!delPctUp && !delValUp) {
-        delColor = COLORS.red;
-    }
-    // FAKE DELIVERY (High % but low value)
-    else if (r.delPct > 50 && r.deliveryValue < 0.20 * r.avgDelVal5) {
-        delColor = COLORS.red;
-    }
-    // OTHERWISE NEUTRAL
-    else {
-        delColor = COLORS.softBlue;
-    }
-
-
-
-
-    // =========================
-    // FORMAT STRING
-    // =========================
+    // FORMAT string (keeps your layout; added EMA stamp in price area briefly)
     const fmt =
       `%c${String(r.DATE || "").padEnd(12)} │ ` +
       `%c${fmtNumIN(r.delQty).padEnd(14)} │ ` +
-      `%c${("₹" + r.price.toFixed(2)).padEnd(10)} │ ` +
-      `%c${r.changePct?.toFixed(2).padEnd(8)} │ ` +
+      `%c${("₹" + (isFinite(r.price) ? r.price.toFixed(2) : "0.00")).padEnd(10)} │ ` +
+      `%c${(r.changePct?.toFixed(2) || "").padEnd(8)} │ ` +
       `%c${priceBar} │ ` +
       `%c  ${r.delPct.toFixed(2).padEnd(6)}  │ ` +
       `%c${delValBar} ` +
@@ -764,131 +614,69 @@ function createDeliveryAndFutureOIAnalyzer() {
       `%c██ ` +
       `%c██` +
       `%c   │  █████████████ ` +
-      `%c${premiumBar} │ ` +
+      `%c${premiumBar} │ ` + 
       `%c${String(r.premium).padEnd(7)} │ ` +
-      `%c${r.premiumChange?.toFixed(2).padEnd(8)} │ ` +
+      `%c${(r.premiumChange?.toFixed(2) || "").padEnd(8)} │ ` +
       `%c${oiValueBar} │ ` +
       `%c${delValCrStr} , %c${OIValCrStr}  │ ` +
-      `%c${String(finalScorePercent).padEnd(5)} │ ` +
-      `%c${scoreSignal}`;
+      `%c ${String(finalScorePercent).padEnd(7)} │ ` +
+      `%c ${String(confidence + "%").padEnd(5)}  │ ` +
+      `%c${scoreSignal.padEnd(16)}`;
 
-    // =========================
-    // STYLES
-    // (appended the two new style entries for Confidence and Risk)
-    // =========================
-    const priceColor =
-      r.price > prev.price
-        ? COLORS.green
-        : r.price < prev.price
-        ? COLORS.red
-        : COLORS.neutral;
+    // Styles array (preserve your colors, add EMA coloring influences)
+    const priceColor = r.price > prev.price ? COLORS.green : r.price < prev.price ? COLORS.red : COLORS.neutral;
 
     const styles = [
       `color:${COLORS.neutral}; font-weight:bold; font-family:monospace;`, // date
       `color:${COLORS.neutral}; font-weight:bold;`, // delQty
-      // PRICE BAR (color depends on price movement)
-      // PRICE VALUE (UP/DOWN)
-      `color:${priceColor}; font-weight:bold; font-family:monospace;`, // price
-      // % CHANGE COLOR
+      `color:${priceColor}; font-weight:bold; font-family:monospace;`, // price text
+      `color:${r.changePct > 0 ? COLORS.green : r.changePct < 0 ? COLORS.red : COLORS.neutral}; font-weight:bold;`, // %chg
       `color:${
-        r.changePct > 0
-          ? COLORS.green
-          : r.changePct < 0
-          ? COLORS.red
-          : COLORS.neutral
-      }; font-weight:bold;`, // %chg
-      `color:${priceColor}; font-weight:bold;`, // priceBar
+            (!r.price || r.price === 0)
+                ? COLORS.lightGray 
+                : priceColor
+        }; font-weight:bold;`,// priceBar
       `color:${delColor}; font-weight:bold;  font-size:14px;`, // del%
-      `color:${COLORS.amberSoft}; font-weight:bold;`, // delVal bar
-      // separator
-      `color:#131722;`,
-      // the 4 small boxes (price / delVal / premium / OI)
+      `color:${
+            (!r.deliveryValue || r.deliveryValue === 0)
+                ? COLORS.lightGray  
+                : COLORS.amberSoft 
+        }; font-weight:bold;`, // delVal bar
+      `color:#131722;`, // sep
+      // 4 small boxes (keep same mapping)
       `color:${priceColor}; font-weight:bold;`, // price box
-      `color:${COLORS.amberSoft}; font-weight:bold;`, // delivery value box
-      `color:${
-        r.premium > prev.premium
-          ? COLORS.green
-          : r.premium < prev.premium
-          ? COLORS.red
-          : COLORS.neutral
-      }; font-weight:bold;`, // premium box
-      `color:${
-        r.OIValue > prev.OIValue
-          ? COLORS.green
-          : r.OIValue < prev.OIValue
-          ? COLORS.red
-          : COLORS.neutral
-      }; font-weight:bold;`, // OIValue box
+      `color:${COLORS.amberSoft}; font-weight:bold;`, // delVal box
+      `color:${r.premium > prev.premium ? COLORS.green : r.premium < prev.premium ? COLORS.red : COLORS.neutral}; font-weight:bold;`, // premium box
+      `color:${r.OIValue > prev.OIValue ? COLORS.green : r.OIValue < prev.OIValue ? COLORS.red : COLORS.neutral}; font-weight:bold;`, // OI box
       `color:#131722;`,
-      // premium bar color
-      `color:${
-        r.premium > prev.premium
-          ? COLORS.green
-          : r.premium < prev.premium
-          ? COLORS.red
-          : COLORS.neutral
-      }; font-weight:bold;`, // premium bar
-      // premium numeric
-      `color:${
-        r.premium > prev.premium
-          ? COLORS.green
-          : r.premium < prev.premium
-          ? COLORS.red
-          : COLORS.neutral
-      }; font-weight:bold;`, // premium
-      // % PREMIUM CHANGE COLOR
-      `color:${
-        r.premiumChange > 0
-          ? COLORS.green
-          : r.premiumChange < 0
-          ? COLORS.red
-          : COLORS.neutral
-      }; font-weight:bold;`, // Premium %chg
-      // OI value bar
-      `color:${
-        r.OIValue > prev.OIValue
-          ? COLORS.green
-          : r.OIValue < prev.OIValue
-          ? COLORS.red
-          : COLORS.neutral
-      }; font-weight:bold;`, // oi value bar
-      // Delivery Value (big)
-      `color:${COLORS.amberSoft}; font-weight:bold; font-family:monospace; font-size:16px;`, // delVal big
-      // Delivery Value (big)
-      `color:${COLORS.softBlue}; font-weight:bold; font-family:monospace; font-size:16px;`, // OilVal big
+      // premium bar color & premium numeric & premium %chg
+      `color:${r.premium > prev.premium ? COLORS.green : r.premium < prev.premium ? COLORS.red : COLORS.neutral}; font-weight:bold;`,
+      `color:${r.premium > prev.premium ? COLORS.green : r.premium < prev.premium ? COLORS.red : COLORS.neutral}; font-weight:bold;`,
+      `color:${r.premiumChange > 0 ? COLORS.green : r.premiumChange < 0 ? COLORS.red : COLORS.neutral}; font-weight:bold;`,
+      // OI value bar color
+      `color:${r.OIValue > prev.OIValue ? COLORS.green : r.OIValue < prev.OIValue ? COLORS.red : COLORS.neutral}; font-weight:bold;`,
+      // delivery & OI big fonts
+      `color:${COLORS.amberSoft}; font-weight:bold; font-family:monospace; font-size:16px;`,
+      `color:${COLORS.softBlue}; font-weight:bold; font-family:monospace; font-size:16px;`,
       // Score color
-      `color:${
-        finalScorePercent >= 50
-          ? COLORS.green
-          : finalScorePercent >= 20
-          ? COLORS.amberSoft
-          : finalScorePercent > -20
-          ? COLORS.neutral
-          : finalScorePercent > -50
-          ? COLORS.softRed
-          : COLORS.red
-      }; font-weight:bold; font-family:monospace;`,
+      `color:${finalScorePercent >= 50 ? COLORS.green : finalScorePercent >= 20 ? COLORS.amberSoft : finalScorePercent > -20 ? COLORS.neutral : finalScorePercent > -50 ? COLORS.softRed : COLORS.red}; font-weight:bold; font-family:monospace;`,
+      // Confidence color
+      `color:${confidence >= 75 ? COLORS.green : confidence >= 50 ? COLORS.yellow : COLORS.red}; font-weight:bold; font-family:monospace; font-size:14px;`,
+      // Score signal color
+      `color:${scoreSignal.includes("BUY") ? COLORS.green : scoreSignal.includes("SELL") ? COLORS.red : scoreSignal.includes("ACCUMULATE") ? COLORS.amberSoft : COLORS.neutral}; font-weight:bold; font-family:monospace;`,
 
-      // Score Signal color
-      `color:${
-        scoreSignal.includes("BUY")
-          ? COLORS.green
-          : scoreSignal.includes("SELL")
-          ? COLORS.red
-          : scoreSignal.includes("ACCUMULATE")
-          ? COLORS.amberSoft
-          : COLORS.neutral
-      }; font-weight:bold; font-family:monospace;`,
     ];
 
     console.log(fmt, ...styles);
   }
 
-  console.log("Delivery Analyzer executed (Delivery + Futures mode).");
+  console.log("Delivery Analyzer executed (Delivery + Futures + EMA mode).");
 }
 
 // RUN
 createDeliveryAndFutureOIAnalyzer();
+
+
 
 const deliveryData = {"HEROMOTOCO":{"28 Nov 2025":{"price":6174.5,"deliveryQty":304238,"deliveryPerc":60.31,"deliveryValue":187.85,"changePct":0.38},"27 Nov 2025":{"price":6151,"deliveryQty":173398,"deliveryPerc":49.24,"deliveryValue":106.66,"changePct":0.24},"26 Nov 2025":{"price":6136.5,"deliveryQty":266381,"deliveryPerc":58.92,"deliveryValue":163.46,"changePct":0.9},"25 Nov 2025":{"price":6081.5,"deliveryQty":424050,"deliveryPerc":59.95,"deliveryValue":257.89,"changePct":1.66},"24 Nov 2025":{"price":5982,"deliveryQty":1067364,"deliveryPerc":79.1,"deliveryValue":638.5,"changePct":-0.34},"21 Nov 2025":{"price":6002.5,"deliveryQty":434992,"deliveryPerc":61.83,"deliveryValue":261.1,"changePct":0.05},"20 Nov 2025":{"price":5999.5,"deliveryQty":544440,"deliveryPerc":42.66,"deliveryValue":326.64,"changePct":2.09},"19 Nov 2025":{"price":5876.5,"deliveryQty":480601,"deliveryPerc":51.38,"deliveryValue":282.43,"changePct":1.33},"18 Nov 2025":{"price":5799.5,"deliveryQty":622223,"deliveryPerc":52.62,"deliveryValue":360.86,"changePct":0.02},"17 Nov 2025":{"price":5798.5,"deliveryQty":722471,"deliveryPerc":40.8,"deliveryValue":418.92,"changePct":4.69},"14 Nov 2025":{"price":5538.5,"deliveryQty":366409,"deliveryPerc":39.04,"deliveryValue":202.94,"changePct":0.54},"13 Nov 2025":{"price":5508.5,"deliveryQty":347019,"deliveryPerc":59.25,"deliveryValue":191.16,"changePct":-0.46},"12 Nov 2025":{"price":5534,"deliveryQty":343971,"deliveryPerc":64.41,"deliveryValue":190.35,"changePct":2.15},"11 Nov 2025":{"price":5417.5,"deliveryQty":213706,"deliveryPerc":61.37,"deliveryValue":115.78,"changePct":1.08},"10 Nov 2025":{"price":5359.5,"deliveryQty":179143,"deliveryPerc":51.48,"deliveryValue":96.01,"changePct":1.2},"07 Nov 2025":{"price":5296,"deliveryQty":260123,"deliveryPerc":59.61,"deliveryValue":137.76,"changePct":-0.56},"06 Nov 2025":{"price":5326,"deliveryQty":550971,"deliveryPerc":67.58,"deliveryValue":293.45,"changePct":0.32},"04 Nov 2025":{"price":5309,"deliveryQty":1190781,"deliveryPerc":59.45,"deliveryValue":632.19,"changePct":-4.15},"03 Nov 2025":{"price":5539,"deliveryQty":129778,"deliveryPerc":58,"deliveryValue":71.88,"changePct":-0.09},"31 Oct 2025":{"price":5544,"deliveryQty":250051,"deliveryPerc":58.95,"deliveryValue":138.63,"changePct":0.53},"30 Oct 2025":{"price":5515,"deliveryQty":254967,"deliveryPerc":63.41,"deliveryValue":140.61,"changePct":-0.66},"29 Oct 2025":{"price":5551.5,"deliveryQty":267309,"deliveryPerc":61.86,"deliveryValue":148.4,"changePct":-1.03},"28 Oct 2025":{"price":5609.5,"deliveryQty":361244,"deliveryPerc":66.92,"deliveryValue":202.64,"changePct":-0.66},"27 Oct 2025":{"price":5646.5,"deliveryQty":219951,"deliveryPerc":51.79,"deliveryValue":124.2,"changePct":1.91},"24 Oct 2025":{"price":5540.5,"deliveryQty":281192,"deliveryPerc":51.43,"deliveryValue":155.79,"changePct":-0.86},"23 Oct 2025":{"price":5588.5,"deliveryQty":311795,"deliveryPerc":63.75,"deliveryValue":174.25,"changePct":-1.03},"21 Oct 2025":{"price":5646.5,"deliveryQty":15544,"deliveryPerc":38.31,"deliveryValue":8.78,"changePct":0.1},"20 Oct 2025":{"price":5641,"deliveryQty":160855,"deliveryPerc":43.62,"deliveryValue":90.74,"changePct":0.87},"17 Oct 2025":{"price":5592.5,"deliveryQty":226772,"deliveryPerc":52.11,"deliveryValue":126.82,"changePct":0.23},"16 Oct 2025":{"price":5579.5,"deliveryQty":137609,"deliveryPerc":46.8,"deliveryValue":76.78,"changePct":0.76},"15 Oct 2025":{"price":5537.5,"deliveryQty":257073,"deliveryPerc":53.03,"deliveryValue":142.35,"changePct":-0.61},"14 Oct 2025":{"price":5571.5,"deliveryQty":225057,"deliveryPerc":59.97,"deliveryValue":125.39,"changePct":0.22},"13 Oct 2025":{"price":5559,"deliveryQty":183736,"deliveryPerc":43.99,"deliveryValue":102.14,"changePct":1.07},"10 Oct 2025":{"price":5500,"deliveryQty":576984,"deliveryPerc":69.07,"deliveryValue":317.34,"changePct":-0.22},"09 Oct 2025":{"price":5512,"deliveryQty":598991,"deliveryPerc":68.62,"deliveryValue":330.16,"changePct":-0.01},"08 Oct 2025":{"price":5512.5,"deliveryQty":519738,"deliveryPerc":65.83,"deliveryValue":286.51,"changePct":-1.83},"07 Oct 2025":{"price":5615,"deliveryQty":526950,"deliveryPerc":61.37,"deliveryValue":295.88,"changePct":0.6},"06 Oct 2025":{"price":5581.5,"deliveryQty":562065,"deliveryPerc":66.56,"deliveryValue":313.72,"changePct":0.56},"03 Oct 2025":{"price":5550.5,"deliveryQty":862158,"deliveryPerc":52.75,"deliveryValue":478.54,"changePct":2.17}}}
 
