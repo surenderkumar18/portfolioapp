@@ -1,4 +1,7 @@
 
+
+const deliveryData = {"IIFL":{"28 Nov 2025":{"price":578.7,"deliveryQty":823943,"deliveryPerc":45.34,"deliveryValue":47.68,"changePct":1.74},"27 Nov 2025":{"price":568.8,"deliveryQty":276446,"deliveryPerc":31.73,"deliveryValue":15.72,"changePct":-0.34},"26 Nov 2025":{"price":570.75,"deliveryQty":1148637,"deliveryPerc":37.71,"deliveryValue":65.56,"changePct":2.4},"25 Nov 2025":{"price":557.4,"deliveryQty":833616,"deliveryPerc":37.3,"deliveryValue":46.47,"changePct":3.84},"24 Nov 2025":{"price":536.8,"deliveryQty":486610,"deliveryPerc":46.36,"deliveryValue":26.12,"changePct":-0.59},"21 Nov 2025":{"price":540,"deliveryQty":349462,"deliveryPerc":39.9,"deliveryValue":18.87,"changePct":-0.87},"20 Nov 2025":{"price":544.75,"deliveryQty":466802,"deliveryPerc":39.48,"deliveryValue":25.43,"changePct":-2.3},"19 Nov 2025":{"price":557.55,"deliveryQty":344031,"deliveryPerc":39.77,"deliveryValue":19.18,"changePct":-1.34},"18 Nov 2025":{"price":565.15,"deliveryQty":727314,"deliveryPerc":35.51,"deliveryValue":41.1,"changePct":0.63},"17 Nov 2025":{"price":561.6,"deliveryQty":750989,"deliveryPerc":36.14,"deliveryValue":42.18,"changePct":2.61},"14 Nov 2025":{"price":547.3,"deliveryQty":1120515,"deliveryPerc":32.26,"deliveryValue":61.33,"changePct":1.79},"13 Nov 2025":{"price":537.65,"deliveryQty":140853,"deliveryPerc":35.56,"deliveryValue":7.57,"changePct":-0.5},"12 Nov 2025":{"price":540.35,"deliveryQty":221114,"deliveryPerc":39.03,"deliveryValue":11.95,"changePct":-0.07},"11 Nov 2025":{"price":540.75,"deliveryQty":520423,"deliveryPerc":42.88,"deliveryValue":28.14,"changePct":-0.21},"10 Nov 2025":{"price":541.9,"deliveryQty":488779,"deliveryPerc":30.03,"deliveryValue":26.49,"changePct":2.96},"07 Nov 2025":{"price":526.3,"deliveryQty":670959,"deliveryPerc":45.19,"deliveryValue":35.31,"changePct":1.07},"06 Nov 2025":{"price":520.75,"deliveryQty":517842,"deliveryPerc":38.33,"deliveryValue":26.97,"changePct":-3.43},"04 Nov 2025":{"price":539.25,"deliveryQty":462635,"deliveryPerc":37.43,"deliveryValue":24.95,"changePct":-0.22},"03 Nov 2025":{"price":540.45,"deliveryQty":888819,"deliveryPerc":24.83,"deliveryValue":48.04,"changePct":1.09},"31 Oct 2025":{"price":534.6,"deliveryQty":1494359,"deliveryPerc":24.02,"deliveryValue":79.89,"changePct":-1.3},"30 Oct 2025":{"price":541.65,"deliveryQty":1695217,"deliveryPerc":28.03,"deliveryValue":91.82,"changePct":3.57},"29 Oct 2025":{"price":523,"deliveryQty":463071,"deliveryPerc":31.85,"deliveryValue":24.22,"changePct":1.79},"28 Oct 2025":{"price":513.8,"deliveryQty":922696,"deliveryPerc":38.71,"deliveryValue":47.41,"changePct":1.67},"27 Oct 2025":{"price":505.35,"deliveryQty":651087,"deliveryPerc":39.25,"deliveryValue":32.9,"changePct":3.17},"24 Oct 2025":{"price":489.8,"deliveryQty":206920,"deliveryPerc":41.98,"deliveryValue":10.13,"changePct":-0.33},"23 Oct 2025":{"price":491.4,"deliveryQty":309756,"deliveryPerc":38.64,"deliveryValue":15.22,"changePct":-1.65},"21 Oct 2025":{"price":499.65,"deliveryQty":89129,"deliveryPerc":47.61,"deliveryValue":4.45,"changePct":-0.01},"20 Oct 2025":{"price":499.7,"deliveryQty":277901,"deliveryPerc":37,"deliveryValue":13.89,"changePct":0.23},"17 Oct 2025":{"price":498.55,"deliveryQty":464200,"deliveryPerc":39.92,"deliveryValue":23.14,"changePct":-0.27},"16 Oct 2025":{"price":499.9,"deliveryQty":621860,"deliveryPerc":54.42,"deliveryValue":31.09,"changePct":-1.25},"15 Oct 2025":{"price":506.25,"deliveryQty":845182,"deliveryPerc":35.56,"deliveryValue":42.79,"changePct":4.33},"14 Oct 2025":{"price":485.25,"deliveryQty":371949,"deliveryPerc":39.14,"deliveryValue":18.05,"changePct":-1.22},"13 Oct 2025":{"price":491.25,"deliveryQty":411225,"deliveryPerc":45.8,"deliveryValue":20.2,"changePct":0.26},"10 Oct 2025":{"price":490,"deliveryQty":394509,"deliveryPerc":39.99,"deliveryValue":19.33,"changePct":-1.04},"09 Oct 2025":{"price":495.15,"deliveryQty":898838,"deliveryPerc":24.1,"deliveryValue":44.51,"changePct":1.16},"08 Oct 2025":{"price":489.45,"deliveryQty":785969,"deliveryPerc":28.81,"deliveryValue":38.47,"changePct":2.93},"07 Oct 2025":{"price":475.5,"deliveryQty":820439,"deliveryPerc":28.34,"deliveryValue":39.01,"changePct":1.28},"06 Oct 2025":{"price":469.5,"deliveryQty":570763,"deliveryPerc":43.13,"deliveryValue":26.8,"changePct":2.69},"03 Oct 2025":{"price":457.2,"deliveryQty":598615,"deliveryPerc":27.98,"deliveryValue":27.37,"changePct":1.11}}}
+
 // ----------------------
 // INPUT -> your data
 // ----------------------
@@ -294,24 +297,31 @@ let futuresData = createFutureDataJSON();
 
 function mergeDeliveryAndFuturesData(deliveryData, futuresData) {
   let symbol = getActiveSymbol();
-  const finalObj = { [symbol]: {} };
-  const deliveryDates = deliveryData[symbol];
-  const futureDates = futuresData[symbol] || {};
 
+  // If symbol not found → fallback to first key
+  if (!symbol) symbol = Object.keys(deliveryData)[0] || Object.keys(futuresData)[0];
+
+  const deliveryDates = (deliveryData && deliveryData[symbol]) ? deliveryData[symbol] : {};
+  const futureDates   = (futuresData  && futuresData[symbol])  ? futuresData[symbol]  : {};
+
+  const finalObj = { [symbol]: {} };
+
+  // Safe combined date list
   const allDates = new Set([
-    ...Object.keys(deliveryDates || {}),
-    ...Object.keys(futureDates || {}),
+    ...Object.keys(deliveryDates),
+    ...Object.keys(futureDates)
   ]);
 
   allDates.forEach((date) => {
     finalObj[symbol][date] = {
-      ...futureDates[date],
-      ...deliveryDates[date]
+      ...(futureDates[date]   || {}),   // safe
+      ...(deliveryDates[date] || {})    // safe
     };
   });
 
   return finalObj;
 }
+
 
 let combined = mergeDeliveryAndFuturesData(deliveryData, futuresData);
 
@@ -319,7 +329,7 @@ let combined = mergeDeliveryAndFuturesData(deliveryData, futuresData);
 // createDeliveryAndFutureOIAnalyzer  — EMA integrated, score + confidence fixed
 // =============================================================================================================================
 function createDeliveryAndFutureOIAnalyzer() {
-  console.clear();
+  //console.clear();
 
   // ---- 5 DAY ROLLING AVERAGE HELPER ----
   function fiveDayAvg(arr, idx, key) {
@@ -677,6 +687,4 @@ function createDeliveryAndFutureOIAnalyzer() {
 createDeliveryAndFutureOIAnalyzer();
 
 
-
-const deliveryData = {"HEROMOTOCO":{"28 Nov 2025":{"price":6174.5,"deliveryQty":304238,"deliveryPerc":60.31,"deliveryValue":187.85,"changePct":0.38},"27 Nov 2025":{"price":6151,"deliveryQty":173398,"deliveryPerc":49.24,"deliveryValue":106.66,"changePct":0.24},"26 Nov 2025":{"price":6136.5,"deliveryQty":266381,"deliveryPerc":58.92,"deliveryValue":163.46,"changePct":0.9},"25 Nov 2025":{"price":6081.5,"deliveryQty":424050,"deliveryPerc":59.95,"deliveryValue":257.89,"changePct":1.66},"24 Nov 2025":{"price":5982,"deliveryQty":1067364,"deliveryPerc":79.1,"deliveryValue":638.5,"changePct":-0.34},"21 Nov 2025":{"price":6002.5,"deliveryQty":434992,"deliveryPerc":61.83,"deliveryValue":261.1,"changePct":0.05},"20 Nov 2025":{"price":5999.5,"deliveryQty":544440,"deliveryPerc":42.66,"deliveryValue":326.64,"changePct":2.09},"19 Nov 2025":{"price":5876.5,"deliveryQty":480601,"deliveryPerc":51.38,"deliveryValue":282.43,"changePct":1.33},"18 Nov 2025":{"price":5799.5,"deliveryQty":622223,"deliveryPerc":52.62,"deliveryValue":360.86,"changePct":0.02},"17 Nov 2025":{"price":5798.5,"deliveryQty":722471,"deliveryPerc":40.8,"deliveryValue":418.92,"changePct":4.69},"14 Nov 2025":{"price":5538.5,"deliveryQty":366409,"deliveryPerc":39.04,"deliveryValue":202.94,"changePct":0.54},"13 Nov 2025":{"price":5508.5,"deliveryQty":347019,"deliveryPerc":59.25,"deliveryValue":191.16,"changePct":-0.46},"12 Nov 2025":{"price":5534,"deliveryQty":343971,"deliveryPerc":64.41,"deliveryValue":190.35,"changePct":2.15},"11 Nov 2025":{"price":5417.5,"deliveryQty":213706,"deliveryPerc":61.37,"deliveryValue":115.78,"changePct":1.08},"10 Nov 2025":{"price":5359.5,"deliveryQty":179143,"deliveryPerc":51.48,"deliveryValue":96.01,"changePct":1.2},"07 Nov 2025":{"price":5296,"deliveryQty":260123,"deliveryPerc":59.61,"deliveryValue":137.76,"changePct":-0.56},"06 Nov 2025":{"price":5326,"deliveryQty":550971,"deliveryPerc":67.58,"deliveryValue":293.45,"changePct":0.32},"04 Nov 2025":{"price":5309,"deliveryQty":1190781,"deliveryPerc":59.45,"deliveryValue":632.19,"changePct":-4.15},"03 Nov 2025":{"price":5539,"deliveryQty":129778,"deliveryPerc":58,"deliveryValue":71.88,"changePct":-0.09},"31 Oct 2025":{"price":5544,"deliveryQty":250051,"deliveryPerc":58.95,"deliveryValue":138.63,"changePct":0.53},"30 Oct 2025":{"price":5515,"deliveryQty":254967,"deliveryPerc":63.41,"deliveryValue":140.61,"changePct":-0.66},"29 Oct 2025":{"price":5551.5,"deliveryQty":267309,"deliveryPerc":61.86,"deliveryValue":148.4,"changePct":-1.03},"28 Oct 2025":{"price":5609.5,"deliveryQty":361244,"deliveryPerc":66.92,"deliveryValue":202.64,"changePct":-0.66},"27 Oct 2025":{"price":5646.5,"deliveryQty":219951,"deliveryPerc":51.79,"deliveryValue":124.2,"changePct":1.91},"24 Oct 2025":{"price":5540.5,"deliveryQty":281192,"deliveryPerc":51.43,"deliveryValue":155.79,"changePct":-0.86},"23 Oct 2025":{"price":5588.5,"deliveryQty":311795,"deliveryPerc":63.75,"deliveryValue":174.25,"changePct":-1.03},"21 Oct 2025":{"price":5646.5,"deliveryQty":15544,"deliveryPerc":38.31,"deliveryValue":8.78,"changePct":0.1},"20 Oct 2025":{"price":5641,"deliveryQty":160855,"deliveryPerc":43.62,"deliveryValue":90.74,"changePct":0.87},"17 Oct 2025":{"price":5592.5,"deliveryQty":226772,"deliveryPerc":52.11,"deliveryValue":126.82,"changePct":0.23},"16 Oct 2025":{"price":5579.5,"deliveryQty":137609,"deliveryPerc":46.8,"deliveryValue":76.78,"changePct":0.76},"15 Oct 2025":{"price":5537.5,"deliveryQty":257073,"deliveryPerc":53.03,"deliveryValue":142.35,"changePct":-0.61},"14 Oct 2025":{"price":5571.5,"deliveryQty":225057,"deliveryPerc":59.97,"deliveryValue":125.39,"changePct":0.22},"13 Oct 2025":{"price":5559,"deliveryQty":183736,"deliveryPerc":43.99,"deliveryValue":102.14,"changePct":1.07},"10 Oct 2025":{"price":5500,"deliveryQty":576984,"deliveryPerc":69.07,"deliveryValue":317.34,"changePct":-0.22},"09 Oct 2025":{"price":5512,"deliveryQty":598991,"deliveryPerc":68.62,"deliveryValue":330.16,"changePct":-0.01},"08 Oct 2025":{"price":5512.5,"deliveryQty":519738,"deliveryPerc":65.83,"deliveryValue":286.51,"changePct":-1.83},"07 Oct 2025":{"price":5615,"deliveryQty":526950,"deliveryPerc":61.37,"deliveryValue":295.88,"changePct":0.6},"06 Oct 2025":{"price":5581.5,"deliveryQty":562065,"deliveryPerc":66.56,"deliveryValue":313.72,"changePct":0.56},"03 Oct 2025":{"price":5550.5,"deliveryQty":862158,"deliveryPerc":52.75,"deliveryValue":478.54,"changePct":2.17}}}
 
