@@ -1,6 +1,5 @@
+const deliveryData = {"ABCAPITAL":{"01 Dec 2025":{"price":356.1,"deliveryQty":2694426,"deliveryPerc":58.79,"deliveryValue":95.95,"changePct":-0.54},"28 Nov 2025":{"price":358.05,"deliveryQty":5238248,"deliveryPerc":62.62,"deliveryValue":187.56,"changePct":1.79},"27 Nov 2025":{"price":351.75,"deliveryQty":1507515,"deliveryPerc":42.94,"deliveryValue":53.03,"changePct":0.56},"26 Nov 2025":{"price":349.8,"deliveryQty":2073495,"deliveryPerc":38,"deliveryValue":72.53,"changePct":1.26},"25 Nov 2025":{"price":345.45,"deliveryQty":5367915,"deliveryPerc":43.04,"deliveryValue":185.43,"changePct":4.1},"24 Nov 2025":{"price":331.85,"deliveryQty":1528239,"deliveryPerc":42.08,"deliveryValue":50.71,"changePct":1.9},"21 Nov 2025":{"price":325.65,"deliveryQty":1369263,"deliveryPerc":51.17,"deliveryValue":44.59,"changePct":-0.67},"20 Nov 2025":{"price":327.85,"deliveryQty":814353,"deliveryPerc":42,"deliveryValue":26.7,"changePct":-0.85},"19 Nov 2025":{"price":330.65,"deliveryQty":840241,"deliveryPerc":43.79,"deliveryValue":27.78,"changePct":-0.74},"18 Nov 2025":{"price":333.1,"deliveryQty":1105318,"deliveryPerc":50.82,"deliveryValue":36.82,"changePct":-0.51},"17 Nov 2025":{"price":334.8,"deliveryQty":934239,"deliveryPerc":45,"deliveryValue":31.28,"changePct":1.03},"14 Nov 2025":{"price":331.4,"deliveryQty":679467,"deliveryPerc":41.44,"deliveryValue":22.52,"changePct":-0.12},"13 Nov 2025":{"price":331.8,"deliveryQty":1432621,"deliveryPerc":47.86,"deliveryValue":47.53,"changePct":0.67},"12 Nov 2025":{"price":329.6,"deliveryQty":1106140,"deliveryPerc":49.01,"deliveryValue":36.46,"changePct":0.08},"11 Nov 2025":{"price":329.35,"deliveryQty":1452253,"deliveryPerc":29.98,"deliveryValue":47.83,"changePct":-1.26},"10 Nov 2025":{"price":333.55,"deliveryQty":1247787,"deliveryPerc":35.82,"deliveryValue":41.62,"changePct":-1.35},"07 Nov 2025":{"price":338.1,"deliveryQty":6075908,"deliveryPerc":45.03,"deliveryValue":205.43,"changePct":3.38},"06 Nov 2025":{"price":327.05,"deliveryQty":1955185,"deliveryPerc":48.65,"deliveryValue":63.94,"changePct":-1.33},"04 Nov 2025":{"price":331.45,"deliveryQty":2147406,"deliveryPerc":55.05,"deliveryValue":71.18,"changePct":-0.84},"03 Nov 2025":{"price":334.25,"deliveryQty":3080986,"deliveryPerc":41.95,"deliveryValue":102.98,"changePct":3.1},"31 Oct 2025":{"price":324.2,"deliveryQty":5985595,"deliveryPerc":41.81,"deliveryValue":194.05,"changePct":-0.8},"30 Oct 2025":{"price":326.8,"deliveryQty":11209811,"deliveryPerc":40.12,"deliveryValue":366.34,"changePct":5.15},"29 Oct 2025":{"price":310.8,"deliveryQty":1279362,"deliveryPerc":35.24,"deliveryValue":39.76,"changePct":-0.58},"28 Oct 2025":{"price":312.6,"deliveryQty":3537967,"deliveryPerc":38.16,"deliveryValue":110.6,"changePct":0.6},"27 Oct 2025":{"price":310.75,"deliveryQty":912016,"deliveryPerc":41.02,"deliveryValue":28.34,"changePct":1.5},"24 Oct 2025":{"price":306.15,"deliveryQty":1197370,"deliveryPerc":45.16,"deliveryValue":36.66,"changePct":-0.6},"23 Oct 2025":{"price":308,"deliveryQty":2366198,"deliveryPerc":53.99,"deliveryValue":72.88,"changePct":1.03},"21 Oct 2025":{"price":304.85,"deliveryQty":219790,"deliveryPerc":49.64,"deliveryValue":6.7,"changePct":-0.16},"20 Oct 2025":{"price":305.35,"deliveryQty":1697372,"deliveryPerc":50.43,"deliveryValue":51.83,"changePct":2.02},"17 Oct 2025":{"price":299.3,"deliveryQty":902070,"deliveryPerc":39.83,"deliveryValue":27,"changePct":-0.23},"16 Oct 2025":{"price":300,"deliveryQty":670313,"deliveryPerc":31.62,"deliveryValue":20.11,"changePct":-1.15},"15 Oct 2025":{"price":303.5,"deliveryQty":1546756,"deliveryPerc":43.4,"deliveryValue":46.94,"changePct":1.85},"14 Oct 2025":{"price":298,"deliveryQty":2054588,"deliveryPerc":47.61,"deliveryValue":61.23,"changePct":-0.35},"13 Oct 2025":{"price":299.05,"deliveryQty":3080474,"deliveryPerc":55.28,"deliveryValue":92.12,"changePct":1.94},"10 Oct 2025":{"price":293.35,"deliveryQty":2553776,"deliveryPerc":59.65,"deliveryValue":74.92,"changePct":-1.54},"09 Oct 2025":{"price":297.95,"deliveryQty":1012732,"deliveryPerc":41.83,"deliveryValue":30.17,"changePct":0.91},"08 Oct 2025":{"price":295.25,"deliveryQty":2113690,"deliveryPerc":39.57,"deliveryValue":62.41,"changePct":-2.72},"07 Oct 2025":{"price":303.5,"deliveryQty":2873039,"deliveryPerc":52.07,"deliveryValue":87.2,"changePct":-0.18},"06 Oct 2025":{"price":304.05,"deliveryQty":2324097,"deliveryPerc":44.78,"deliveryValue":70.66,"changePct":0.03}}}
 
-
-const deliveryData = {"IIFL":{"28 Nov 2025":{"price":578.7,"deliveryQty":823943,"deliveryPerc":45.34,"deliveryValue":47.68,"changePct":1.74},"27 Nov 2025":{"price":568.8,"deliveryQty":276446,"deliveryPerc":31.73,"deliveryValue":15.72,"changePct":-0.34},"26 Nov 2025":{"price":570.75,"deliveryQty":1148637,"deliveryPerc":37.71,"deliveryValue":65.56,"changePct":2.4},"25 Nov 2025":{"price":557.4,"deliveryQty":833616,"deliveryPerc":37.3,"deliveryValue":46.47,"changePct":3.84},"24 Nov 2025":{"price":536.8,"deliveryQty":486610,"deliveryPerc":46.36,"deliveryValue":26.12,"changePct":-0.59},"21 Nov 2025":{"price":540,"deliveryQty":349462,"deliveryPerc":39.9,"deliveryValue":18.87,"changePct":-0.87},"20 Nov 2025":{"price":544.75,"deliveryQty":466802,"deliveryPerc":39.48,"deliveryValue":25.43,"changePct":-2.3},"19 Nov 2025":{"price":557.55,"deliveryQty":344031,"deliveryPerc":39.77,"deliveryValue":19.18,"changePct":-1.34},"18 Nov 2025":{"price":565.15,"deliveryQty":727314,"deliveryPerc":35.51,"deliveryValue":41.1,"changePct":0.63},"17 Nov 2025":{"price":561.6,"deliveryQty":750989,"deliveryPerc":36.14,"deliveryValue":42.18,"changePct":2.61},"14 Nov 2025":{"price":547.3,"deliveryQty":1120515,"deliveryPerc":32.26,"deliveryValue":61.33,"changePct":1.79},"13 Nov 2025":{"price":537.65,"deliveryQty":140853,"deliveryPerc":35.56,"deliveryValue":7.57,"changePct":-0.5},"12 Nov 2025":{"price":540.35,"deliveryQty":221114,"deliveryPerc":39.03,"deliveryValue":11.95,"changePct":-0.07},"11 Nov 2025":{"price":540.75,"deliveryQty":520423,"deliveryPerc":42.88,"deliveryValue":28.14,"changePct":-0.21},"10 Nov 2025":{"price":541.9,"deliveryQty":488779,"deliveryPerc":30.03,"deliveryValue":26.49,"changePct":2.96},"07 Nov 2025":{"price":526.3,"deliveryQty":670959,"deliveryPerc":45.19,"deliveryValue":35.31,"changePct":1.07},"06 Nov 2025":{"price":520.75,"deliveryQty":517842,"deliveryPerc":38.33,"deliveryValue":26.97,"changePct":-3.43},"04 Nov 2025":{"price":539.25,"deliveryQty":462635,"deliveryPerc":37.43,"deliveryValue":24.95,"changePct":-0.22},"03 Nov 2025":{"price":540.45,"deliveryQty":888819,"deliveryPerc":24.83,"deliveryValue":48.04,"changePct":1.09},"31 Oct 2025":{"price":534.6,"deliveryQty":1494359,"deliveryPerc":24.02,"deliveryValue":79.89,"changePct":-1.3},"30 Oct 2025":{"price":541.65,"deliveryQty":1695217,"deliveryPerc":28.03,"deliveryValue":91.82,"changePct":3.57},"29 Oct 2025":{"price":523,"deliveryQty":463071,"deliveryPerc":31.85,"deliveryValue":24.22,"changePct":1.79},"28 Oct 2025":{"price":513.8,"deliveryQty":922696,"deliveryPerc":38.71,"deliveryValue":47.41,"changePct":1.67},"27 Oct 2025":{"price":505.35,"deliveryQty":651087,"deliveryPerc":39.25,"deliveryValue":32.9,"changePct":3.17},"24 Oct 2025":{"price":489.8,"deliveryQty":206920,"deliveryPerc":41.98,"deliveryValue":10.13,"changePct":-0.33},"23 Oct 2025":{"price":491.4,"deliveryQty":309756,"deliveryPerc":38.64,"deliveryValue":15.22,"changePct":-1.65},"21 Oct 2025":{"price":499.65,"deliveryQty":89129,"deliveryPerc":47.61,"deliveryValue":4.45,"changePct":-0.01},"20 Oct 2025":{"price":499.7,"deliveryQty":277901,"deliveryPerc":37,"deliveryValue":13.89,"changePct":0.23},"17 Oct 2025":{"price":498.55,"deliveryQty":464200,"deliveryPerc":39.92,"deliveryValue":23.14,"changePct":-0.27},"16 Oct 2025":{"price":499.9,"deliveryQty":621860,"deliveryPerc":54.42,"deliveryValue":31.09,"changePct":-1.25},"15 Oct 2025":{"price":506.25,"deliveryQty":845182,"deliveryPerc":35.56,"deliveryValue":42.79,"changePct":4.33},"14 Oct 2025":{"price":485.25,"deliveryQty":371949,"deliveryPerc":39.14,"deliveryValue":18.05,"changePct":-1.22},"13 Oct 2025":{"price":491.25,"deliveryQty":411225,"deliveryPerc":45.8,"deliveryValue":20.2,"changePct":0.26},"10 Oct 2025":{"price":490,"deliveryQty":394509,"deliveryPerc":39.99,"deliveryValue":19.33,"changePct":-1.04},"09 Oct 2025":{"price":495.15,"deliveryQty":898838,"deliveryPerc":24.1,"deliveryValue":44.51,"changePct":1.16},"08 Oct 2025":{"price":489.45,"deliveryQty":785969,"deliveryPerc":28.81,"deliveryValue":38.47,"changePct":2.93},"07 Oct 2025":{"price":475.5,"deliveryQty":820439,"deliveryPerc":28.34,"deliveryValue":39.01,"changePct":1.28},"06 Oct 2025":{"price":469.5,"deliveryQty":570763,"deliveryPerc":43.13,"deliveryValue":26.8,"changePct":2.69},"03 Oct 2025":{"price":457.2,"deliveryQty":598615,"deliveryPerc":27.98,"deliveryValue":27.37,"changePct":1.11}}}
 
 // ----------------------
 // INPUT -> your data
@@ -154,42 +153,16 @@ function rolloverBarChart() {
 }
 
 rolloverBarChart();
-
 // ==================================================================================
 /*  
 
   Dailly steps to create Delivery & Futures OI Analyzer
-  
-  Rollover Analyzer:::
-
-    1. Get Rollover Excelsheet & convert to JSON from "https://www.minifier.org/excel-to-json" 
-    2. PASTE JSON into "JSON Minifier" in "http://localhost:3000/tools/filters".
-    3. COPY minified JSON in "rollover.js" in let rolloverData = {} object
-
-  Create Delivery data JSON:::
-
-    1. GO to "https://web.strike.money/stocks/ashok-leyland/volume-delivery"
-      - Make sure SYMBOL TAB is selected.
-      - Make sure "Volume & Delivery" sub-TAB is selected.
-    2. run "createDeliveryDataJSON.js" code in console, create Delivery data JSON
-    3. PASTE output in "deliveryAndFuturesTable.js", const deliveryData = {}
-
-  Delivery & Futures OI Analyzer:::
-
-    1. OPEN selected SYMBOL TAB
-    2. Select "Futures" sub TAB
-    2. COPY entire code of "deliveryAndFuturesTable.js" and RUN in concole.
-      - it create Futures OI data
-      - combine both delivery & futures OI data
-      - and create Analyzer.
-  
+  (unchanged instructions - paste the file into console)
 */
 // ==================================================================================
 // ==================================================================================
-// Final Delivery & Futures OI Analyzer (EMA fully integrated)
+// Final Delivery & Futures OI Analyzer (EMA fully integrated, EMA Entry column B)
 // ==================================================================================
-
-/* Paste this whole file into console (replacing previous analyzer) */
 
 // ========= Detect active symbol (attempt)
 function getActiveSymbol() {
@@ -418,8 +391,7 @@ function createDeliveryAndFutureOIAnalyzer() {
 
   // premium min/max
   const maxPremium = Math.max(...rows.map(r => r.premium || 0), 1);
-  //const minPremium = Math.min(...rows.map(r => r.premium).filter(p => p > 0), 1);
-    const minPremium = Math.min(...rows.map(r => r.premium).filter(p => p > 0));
+  const minPremium = Math.min(...rows.map(r => r.premium).filter(p => p > 0));
 
   // bar helpers
   const BAR_FILLED = "█", BAR_EMPTY = " ";
@@ -461,9 +433,23 @@ function createDeliveryAndFutureOIAnalyzer() {
     "Val(Δ)".padEnd(29) + "│ " +
     "Score".padEnd(6) + "│ " +
     "Conf".padEnd(7)  + "│ " +
-    "Signal".padEnd(14);
+    "Signal".padEnd(14) + "│ " +
+    "EMA Entry".padEnd(14);
 
   console.log(`%c${heading}`, `background:${COLORS.darkBg}; color:#e0e0e0; font-size: 16px; font-weight:bold; padding:6px 2px;`);
+
+  function formatSigned3(n) {
+    if (n === 0) return "00"; // or "0" or "00" if you prefer
+
+    const sign = n > 0 ? "+" : "−"; // proper minus
+    const absVal = Math.abs(n);
+
+    // pad to 2 digits (06, 02, 15, 125)
+    const padded = absVal < 10 ? "0" + absVal : absVal;
+
+    return sign + padded;
+  }
+
 
   // main loop
   for (let idx = 0; idx < rows.length; idx++) {
@@ -510,7 +496,6 @@ function createDeliveryAndFutureOIAnalyzer() {
         const empty = SETTINGS.PRICE_BAR_LEN - filled;
         priceBar = "█".repeat(filled) + "░".repeat(empty);
     }
-
 
     let premiumBar;
     {
@@ -567,20 +552,50 @@ function createDeliveryAndFutureOIAnalyzer() {
     const deliveryStrong = r.delPct >= 40 || r.deliveryValue >= maxDelValue * 0.4;
 
     if (emaTrendUp && priceUp && oiUp && premiumUp && deliveryStrong) {
-      signal = "BUY 🔥";
+      signal = "🔥BUY";
     } else if ((emaTrendUp || deliveryStrong) && oiUp) {
-      signal = "ACCUMULATE 🟧";
+      signal = "🟧ACCUMULATE";
     } else if (emaTrendDown && priceDown && oiDown && premiumDown) {
-      signal = "SELL 🚨";
+      signal = "🚨SELL";
     }
 
     // scoreSignal from finalScorePercent (kept similar mapping)
     let scoreSignal = "";
-    if (finalScorePercent >= 60) scoreSignal = "BUY 🔥";
-    else if (finalScorePercent >= 25) scoreSignal = "ACCUMULATE 🟧";
-    else if (finalScorePercent > -25) scoreSignal = "HOLD ➖";
-    else if (finalScorePercent > -60) scoreSignal = "LIGHT SELL ⚠️";
-    else scoreSignal = "SELL 🚨";
+    if (finalScorePercent >= 60) scoreSignal = "🔥BUY";
+    else if (finalScorePercent >= 25) scoreSignal = "🟧ACCUMULATE";
+    else if (finalScorePercent > -25) scoreSignal = "➖HOLD";
+    else if (finalScorePercent > -60) scoreSignal = "⚠️LIGHT SELL";
+    else scoreSignal = "🚨SELL";
+
+
+    // Determine emoji + label separately
+    let scoreEmoji = "";
+    let scoreLabel = "";
+
+    if (finalScorePercent >= 60) {
+        scoreEmoji = "🔥";
+        scoreLabel = "BUY";
+    }
+    else if (finalScorePercent >= 25) {
+        scoreEmoji = "🟧";
+        scoreLabel = "ACCUMULATE";
+    }
+    else if (finalScorePercent > -25) {
+        scoreEmoji = "➖";
+        scoreLabel = "HOLD";
+    }
+    else if (finalScorePercent > -60) {
+        scoreEmoji = "⚠️";
+        scoreLabel = "LIGHT SELL";
+    }
+    else {
+        scoreEmoji = "🚨";
+        scoreLabel = "SELL";
+    }
+
+    // label column fixed to 12 chars
+    const scoreLabelPadded = scoreLabel.padEnd(12, " ");
+
 
     // CONFIDENCE calculation (fixed: derive priceScore & oiScore from averages)
     const priceScore_bool = (r.price > r.avgPrice5) ? 20 : 0;
@@ -609,7 +624,76 @@ function createDeliveryAndFutureOIAnalyzer() {
     else if (r.delPct > 50 && r.deliveryValue < 0.20 * r.avgDelVal5) delColor = COLORS.red;
     else delColor = COLORS.softBlue;
 
-    // FORMAT string (keeps your layout; added EMA stamp in price area briefly)
+    // =========================
+    // EMA ENTRY LOGIC  (emoji + fixed-width label)
+    // =========================
+
+    let emaEmoji = "⚪";       // default neutral icon
+    let emaLabel = "Neutral";  // default label
+    let emaEntryColor = COLORS.neutral;
+
+    const hasEMAs =
+      isFinite(r.EMA8) &&
+      isFinite(r.EMA17) &&
+      isFinite(r.EMA34) &&
+      isFinite(r.price) &&
+      r.price !== 0;
+
+    if (hasEMAs) {
+      const dist8  = ((r.price - r.EMA8)  / r.EMA8 ) * 100;
+      const dist17 = ((r.price - r.EMA17) / r.EMA17) * 100;
+      const dist34 = ((r.price - r.EMA34) / r.EMA34) * 100;
+
+      const abs8  = Math.abs(dist8);
+      const abs17 = Math.abs(dist17);
+      const abs34 = Math.abs(dist34);
+
+      // thresholds (tunable)
+      const t8  = 1.5;
+      const t17 = 2.0;
+      const t34 = 3.0;
+
+      if (abs8 <= t8) {
+        emaEmoji = "⭐";
+        emaLabel = "EMA8 Touch";
+        emaEntryColor = COLORS.green;
+      }
+      else if (abs17 <= t17) {
+        emaEmoji = " ✔";
+        emaLabel = "EMA17 Touch";
+        emaEntryColor = COLORS.softGreen;
+      }
+      else if (abs34 <= t34) {
+        emaEmoji = "🔵";
+        emaLabel = "EMA34 Pullback";
+        emaEntryColor = COLORS.softBlue;
+      }
+      else if (dist8 > 3) {
+        emaEmoji = "⛔";
+        emaLabel = "Extended";
+        emaEntryColor = COLORS.amberSoft;
+      }
+      else if (r.price < r.EMA34) {
+        emaEmoji = "⚠️";
+        emaLabel = "Below EMA34";
+        emaEntryColor = COLORS.red;
+      }
+      else {
+        emaEmoji = "⚪";        // Neutral icon
+        emaLabel = "Neutral";
+        emaEntryColor = COLORS.neutral;
+      }
+    }
+
+    // pad label so every row aligns perfectly
+    const emaLabelPadded = emaLabel.padEnd(14, " ");
+
+
+    const rawScore = Math.round(finalScoreAdjusted * 100);
+    const finalScorePercentWithSign = formatSigned3(rawScore);
+
+
+    // FORMAT string (keeps your layout; added EMA Entry at the end)
     const fmt =
       `%c${String(r.DATE || "").padEnd(12)} │ ` +
       `%c${fmtNumIN(r.delQty).padEnd(14)} │ ` +
@@ -629,11 +713,12 @@ function createDeliveryAndFutureOIAnalyzer() {
       `%c${(r.premiumChange?.toFixed(2) || "").padEnd(8)} │ ` +
       `%c${oiValueBar} │ ` +
       `%c${delValCrStr} , %c${OIValCrStr}  │ ` +
-      `%c ${String(finalScorePercent).padEnd(7)} │ ` +
+      `%c ${String(finalScorePercentWithSign).padEnd(7)} │ ` +
       `%c ${String(confidence + "%").padEnd(5)}  │ ` +
-      `%c${scoreSignal.padEnd(16)}`;
+      `%c${scoreEmoji} %c${scoreLabelPadded} │ ` +
+      `%c${emaEmoji} %c${emaLabelPadded} │ `;
 
-    // Styles array (preserve your colors, add EMA coloring influences)
+    // Styles array (preserve your colors, add EMA entry color)
     const priceColor = r.price > prev.price ? COLORS.green : r.price < prev.price ? COLORS.red : COLORS.neutral;
 
     const styles = [
@@ -673,7 +758,19 @@ function createDeliveryAndFutureOIAnalyzer() {
       // Confidence color
       `color:${confidence >= 75 ? COLORS.green : confidence >= 50 ? COLORS.yellow : COLORS.red}; font-weight:bold; font-family:monospace; font-size:14px;`,
       // Score signal color
-      `color:${scoreSignal.includes("BUY") ? COLORS.green : scoreSignal.includes("SELL") ? COLORS.red : scoreSignal.includes("ACCUMULATE") ? COLORS.amberSoft : COLORS.neutral}; font-weight:bold; font-family:monospace;`,
+      // emoji always white
+      `color:#ffffff; font-size:16px;`,
+      // label colored by rating
+      `color:${
+          scoreLabel.includes("BUY") ? COLORS.green :
+          scoreLabel.includes("SELL") ? COLORS.red :
+          scoreLabel.includes("ACCUMULATE") ? COLORS.amberSoft : COLORS.neutral
+      }; font-weight:bold; font-family:monospace;`,
+      // emoji always white
+      `color:${COLORS.white}; font-size:15px; font-weight:bold;`,
+
+      // padded EMA label with your dynamic color
+      `color:${emaEntryColor}; font-size:14px; font-weight:bold; font-family:monospace;`,
 
     ];
 
@@ -685,6 +782,4 @@ function createDeliveryAndFutureOIAnalyzer() {
 
 // RUN
 createDeliveryAndFutureOIAnalyzer();
-
-
 
