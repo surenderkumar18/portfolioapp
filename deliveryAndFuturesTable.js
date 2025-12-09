@@ -1,8 +1,5 @@
 
 
-
-
-
 // ----------------------
 // INPUT -> your data
 // ----------------------
@@ -70,17 +67,24 @@ function rolloverBarChart(todayOI) {
     return;
   }
 
+  const monthMap = {
+    Jan: 1, Feb: 2, Mar: 3, Apr: 4, May: 5, Jun: 6,
+    Jul: 7, Aug: 8, Sep: 9, Oct: 10, Nov: 11, Dec: 12
+  };
+
   const months = Object.keys(data)
-    .filter(
-      (k) =>
-        k.endsWith("_25") &&
-        !isNaN(Date.parse("2025-" + k.split("_")[0] + "-01"))
-    )
+    .filter(k => /_[0-9]{2}$/.test(k)) // match *_YY like Nov_25, Dec_25, Jan_26
     .sort((a, b) => {
-      const d1 = new Date("2025-" + a.split("_")[0] + "-01");
-      const d2 = new Date("2025-" + b.split("_")[0] + "-01");
-      return d1 - d2;
+      const [ma, ya] = a.split("_");
+      const [mb, yb] = b.split("_");
+
+      // convert to real date
+      const da = new Date(2000 + Number(ya), monthMap[ma] - 1, 1);
+      const db = new Date(2000 + Number(yb), monthMap[mb] - 1, 1);
+
+      return da - db;
     });
+
 
   const toNum = (v) => {
     if (v === "-" || v === undefined || v === null) return NaN;
@@ -180,7 +184,7 @@ function rolloverBarChart(todayOI) {
 
       const dotsColor = "color:#f1f3f4;";
       const rolledoverColor =
-          isSecondLast ? "color:#ffffff; font-size:14px;"
+          isSecondLast ? "color:#9e9e9e; font-size:14px;"
         : isLast       ? `${barColor} font-size:20px;  font-weight:bold;`
         : "";
 
@@ -191,7 +195,7 @@ function rolloverBarChart(todayOI) {
           `%c${row.label.padEnd(14)} | %c${bar}            %c:::     %c${formatIndian(row.oiB)}  %c${
               isSecondLast ? "(Rolled over to this month)" : ""
           } ${
-              isLast ? "(Todays OI)" : ""
+              isLast ? "(Current OI)" : ""
           }`,
           labelColor,
           barColor,
