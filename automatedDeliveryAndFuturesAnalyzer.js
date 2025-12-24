@@ -248,6 +248,9 @@
     };
 
     rows.push(todayOIData);
+    if (isFinite(todayOI)) {
+      maxOI = Math.max(maxOI, todayOI);
+    }
 
     // Reverse: latest → oldest
     //rows.reverse();
@@ -786,15 +789,15 @@ try {
       "Price".padEnd(8) + "│ " +
       "%Chg".padEnd(5) + "│ " +
       "Price Bar".padEnd(19) + "│ " +
-      " Del%".padEnd(6) + "│ " +
+      "Del% ".padEnd(6) + "│ " +
       "Delivery Value Bar (₹ Cr)".padEnd(30) + "│ " +
       "OI Qty".padEnd(8) + "│ " +
       "OI Value Bar".padEnd(30) +
-      "Price/DelValue/Premium/OiValue".padEnd(31) + "│ " +
-      "Premium Bar".padEnd(18) + "│ " +
+      "Price/DelValue/Premium/OiValue".padEnd(32) +
+      "Premium Bar".padEnd(20) + "│ " +
       "Prem".padEnd(6) + "│ " +
       "%Chg".padEnd(6) + "│ " +
-      "Delivery/Future OI val".padEnd(25) + "│ " +
+      "Delivery/Future OI val".padEnd(21) + "│ " +
       "Score".padEnd(8) + "│ " +
       "Conf".padEnd(7)  + "│ " +
       "Signal".padEnd(13)+ "│ " +
@@ -889,8 +892,8 @@ try {
       const delValCr = r.deliveryValue;
       const prevValCr = prev.deliveryValue || 0;
       const deltaCr = delValCr - prevValCr;
-      const delValCrStr = String(fmtCr(delValCr)).padEnd(12);
-      const OIValCrStr = fmtCr(r.OIValue).padEnd(12);
+      const delValCrStr = String(fmtCr(delValCr)).padEnd(10);
+      const OIValCrStr = fmtCr(r.OIValue).padEnd(10);
 
       // dynamic font
       const pctOfMax = delValCr / maxDelValue;
