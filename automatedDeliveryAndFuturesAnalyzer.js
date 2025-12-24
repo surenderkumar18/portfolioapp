@@ -134,343 +134,192 @@
     Bar length now depends on OI (NOT rollover%)
   ===========================================================*/
 
-  function rolloverBarChart(todayOI) {
-    // ========= Detect active symbol (attempt)
-    function getActiveSymbol() {
-      try {
-        const tabs = document.querySelectorAll(
-          ".top_tab_parent .draggable_top_bar .top_bar .w-100"
-        );
-        for (const tab of tabs) {
-          const a = tab.querySelector(".top_bar_item.active a");
-          if (a && a.textContent.trim())
-            return a.textContent.trim().toUpperCase();
-        }
-      } catch (e) {
-        /* ignore */
-      }
+ function rolloverBarChart(todayOI) {
+
+  /* ===============================
+     🎨 COLOR PALETTE (SINGLE SOURCE)
+  =============================== */
+  const COLORS = {
+    up: "#13814b",
+    down: "#c8062e",
+    flat: "#D9A441",
+
+    historyBar: "#287bf0",
+    muted: "#9aa0a6",
+    dots: "#f1f3f4",
+    note: "#9e9e9e",
+
+    gradeC: "#ff5252",
+    gradeB: "#FFB74D",
+    gradeA: "#FFD54F",
+    gradeAPlus: "#64FFDA",
+    gradeAPlusPlus: "#1DE9B6",
+    gradeAPlusPlusPlus: "#00E676",
+
+    titleSymbol: "#00bcd4",
+    titleSep: "#ffffff",
+    titleName: "#b050ff",
+    pctUp: "#00FFA3",   // neon green
+    pctDown: "#FF5252",  // neon red
+    pctFlat: "#FFD54F",  // yellow
+  };
+
+  /* ===============================
+     🔍 ACTIVE SYMBOL
+  =============================== */
+  function getActiveSymbol() {
+    try {
+      const a = document.querySelector(".top_bar_item.active a");
+      return a?.textContent.trim().toUpperCase() || null;
+    } catch {
       return null;
     }
-
-    // ---------- pick symbol & rollover object (if you use rollover map externally)
-    let symbol = getActiveSymbol();
-
-    // ========= format Indian
-    function formatIndian(num) {
-      if (!isFinite(num)) return "-";
-
-      // Correct Indian comma formatting:
-      // 12345678 → 1,23,45,678
-      const int = num.toString();
-      const last3 = int.slice(-3);
-      const other = int.slice(0, -3);
-
-      let formatted = "";
-      if (other !== "")
-        formatted = other.replace(/\B(?=(\d{2})+(?!\d))/g, ",") + "," + last3;
-      else
-        formatted = last3;
-
-      // Convert to Cr/Lac with correct decimal
-      let suffix = "";
-      if (num >= 1e7) {
-        suffix = ` (${(num / 1e7).toFixed(2)} Cr)`;
-      } else if (num >= 1e5) {
-        suffix = ` (${(num / 1e5).toFixed(2)} Lac)`;
-      }
-
-      return formatted + suffix;
-    }
-
-
-      // =======================================
-    const data = rolloverData[symbol];
-    if (!data) {
-      console.log(`❌ Symbol '${symbol}' not found in rolloverData`);
-      return;
-    }
-
-    const monthMap = {
-      Jan: 1, Feb: 2, Mar: 3, Apr: 4, May: 5, Jun: 6,
-      Jul: 7, Aug: 8, Sep: 9, Oct: 10, Nov: 11, Dec: 12
-    };
-
-    const months = Object.keys(data)
-      .filter(k => /_[0-9]{2}$/.test(k)) // match *_YY like Nov_25, Dec_25, Jan_26
-      .sort((a, b) => {
-        const [ma, ya] = a.split("_");
-        const [mb, yb] = b.split("_");
-
-        // convert to real date
-        const da = new Date(2000 + Number(ya), monthMap[ma] - 1, 1);
-        const db = new Date(2000 + Number(yb), monthMap[mb] - 1, 1);
-
-        return da - db;
-      });
-
-
-    const toNum = (v) => {
-      if (v === "-" || v === undefined || v === null) return NaN;
-      const n = Number(v);
-      return isFinite(n) ? n : NaN;
-    };
-
-    const rows = [];
-
-    let maxOI = 0; // find max OI_to
-
-    for (let i = 0; i < months.length - 1; i++) {
-      const m1 = months[i];
-      const m2 = months[i + 1];
-
-      const oiA = toNum(data[m1]);
-      const oiB = toNum(data[m2]);
-
-      if (isFinite(oiB)) maxOI = Math.max(maxOI, oiB); // find global max OI
-
-      let pct;
-      if (!isFinite(oiA) && !isFinite(oiB)) pct = NaN;
-      else if (!isFinite(oiA)) pct = 100;
-      else if (!isFinite(oiB)) pct = 0;
-      else pct = (oiB / (oiA + oiB)) * 100;
-
-      rows.push({
-        label: `${m1} → ${m2}`,
-        value: isFinite(pct) ? Number(pct.toFixed(2)) : 0,
-        oiA,
-        oiB,
-      });
-    }
-
-    let todayOIData = {
-      label: "Tod_25 → Tod_25",
-      oiB: todayOI,
-    };
-
-    rows.push(todayOIData);
-    if (isFinite(todayOI)) {
-      maxOI = Math.max(maxOI, todayOI);
-    }
-
-    // Reverse: latest → oldest
-    //rows.reverse();
-
-    const TITLE = `${symbol} `;
-    console.clear();
-    console.log(
-      `%c${TITLE}%c ::::::  %cRollover Analyzer`,
-      `color:#00bcd4; font-size:26px; font-weight:900;  padding:10px 0px;`,
-      `color:#ffffff; font-size:18px; font-weight:bold;`,
-      `color:#b050ff; font-size:22px; font-weight:bold;`
-    );
-
-    rows.forEach((row, i) => {
-        const isLast = i === rows.length - 1;
-        const isSecondLast = i === rows.length - 2;
-
-        // ==== OI-scaled bars ====
-        const MAX_BAR = 80;
-				let barLength = Math.round(((row.oiB || 0) / maxOI) * MAX_BAR);
-
-				if (!isFinite(barLength)) barLength = 0;
-				if (barLength < 0) barLength = 0;
-				if (barLength > MAX_BAR) barLength = MAX_BAR;
-
-        const filledBar = "█".repeat(barLength);
-        const emptyBar = " ".repeat(MAX_BAR - barLength);
-        const bar = filledBar + emptyBar;
-
-        // ==========================================
-        // 🔥 Determine last-row bar & value color
-        // ==========================================
-        let barColor;
-        let valueColor;
-
-        let oiChangePct = 0;
-        let oiChangeStr = "";
-
-        if (isLast) {
-          const lastOI = rows[rows.length - 1].oiB;
-          const prevOI = rows[rows.length - 2].oiB;
-
-          if (prevOI > 0) {
-              oiChangePct = ((lastOI - prevOI) / prevOI) * 100;
-          }
-
-          const sign = oiChangePct > 0 ? "+" : oiChangePct < 0 ? "−" : "";
-          oiChangeStr = `${sign}${Math.abs(oiChangePct).toFixed(2)}%`;
-
-          if (lastOI > prevOI) {
-              barColor   = "color:#13814b;";
-              valueColor = "color:#13814b; font-size:14px; font-weight:bold;";
-          } else if (lastOI < prevOI) {
-              barColor   = "color:#c8062e;";
-              valueColor = "color:#c8062e; font-size:14px; font-weight:bold;";
-          } else {
-              barColor   = "color:#D9A441;";
-              valueColor = "color:#D9A441; font-size:14px; font-weight:bold;";
-          }
-
-      } else if (isSecondLast) {
-          // 🔥 PREVIOUS / ROLLOVER MONTH
-          barColor   = "color:#D9A441;";
-          valueColor = "color:#D9A441; font-size:14px; font-weight:bold;";
-
-      } else {
-          // older historical months
-          barColor   = "color:#287bf0;";
-          valueColor = "color:#287bf0; font-size:14px; font-weight:bold;";
-      }
-
-
-
-        // ==========================================
-        // 🎨 Label color
-        // ==========================================
-        const labelColor = isLast
-            ? "color:#D9A441; font-weight:bold;"
-            : "color:#9aa0a6; font-weight:bold;";
-
-        const dotsColor = "color:#f1f3f4;";
-        const rolledoverColor =
-            isSecondLast ? "color:#9e9e9e; font-size:14px;"
-          : isLast       ? `${barColor} font-size:20px;  font-weight:bold;`
-          : "";
-        
-
-        const oiChangeGreen = "color:#00E676; font-size:26px; font-weight:bold;"; // bright green
-        const oiChangeRed   = "color:#FF1744; font-size:26px; font-weight:bold;"; // bright red  
-
-        const oiChangeColor =
-          oiChangePct > 0 ? oiChangeGreen :
-          oiChangePct < 0 ? oiChangeRed   :
-          "color:#D9A441; font-size:14px; font-weight:bold;"; // neutral (0%)
-
-        // ==========================================
-        // 🖨️ Print the formatted row
-        // ==========================================
-        console.log(
-          `%c${row.label.padEnd(14)} | %c${bar}            %c:::     %c${formatIndian(row.oiB)}  %c${
-              isSecondLast ? "(Rolled over to this month)" : isLast ? "(Current OI)" : ""
-          } %c${isLast ? oiChangeStr : ""}`,
-          labelColor,        // 1️⃣ row label
-          barColor,          // 2️⃣ bar
-          dotsColor,         // 3️⃣ dots
-          valueColor,        // 4️⃣ OI value
-          rolledoverColor || "color:transparent;", // 5️⃣ label
-          oiChangeColor || "color:transparent;"    // 6️⃣ % change
-        );
-
-    });
-
-    // =====================================================================
-    // 🏆 ROLLOVER GRADING LOGIC (ADDED — does NOT affect existing logic)
-    // =====================================================================
-
-    // =====================================================================
-// 🏆 ROLLOVER GRADING LOGIC (RELAXED — SAFE UPGRADE)
-// =====================================================================
-
-try {
-  const lastRow = rows[rows.length - 1];
-  const prevRow = rows[rows.length - 2];
-
-  const prevOI = prevRow?.oiB || 0;
-  const currOI = lastRow?.oiB || 0;
-
-  // ---------- Core Metrics
-  const rolloverRatio = prevOI > 0 ? currOI / prevOI : 0;
-  const momOIChange   = prevOI > 0 ? ((currOI - prevOI) / prevOI) * 100 : 0;
-
-  // ---------- Multi-month OI continuity (boosted importance)
-  let continuityScore = 0;
-  let increasingCount = 0;
-
-  for (let i = 1; i < months.length; i++) {
-    const a = toNum(data[months[i - 1]]);
-    const b = toNum(data[months[i]]);
-    if (isFinite(a) && isFinite(b) && b > a) increasingCount++;
   }
 
-  if (increasingCount >= months.length - 2) continuityScore = 18;
-  else if (increasingCount >= Math.floor(months.length / 2)) continuityScore = 12;
-  else continuityScore = 5;
+  const symbol = getActiveSymbol();
+  if (!symbol || !rolloverData[symbol]) {
+    console.log("❌ Symbol not found");
+    return;
+  }
 
-  // ---------- Score Calculation (100 point system)
-  let score = 0;
+  const data = rolloverData[symbol];
 
-  // 🔹 Rollover Ratio (RELAXED)
-  if (rolloverRatio >= 1.40) score += 35;
-  else if (rolloverRatio >= 1.25) score += 30;
-  else if (rolloverRatio >= 1.10) score += 25;
-  else if (rolloverRatio >= 1.05) score += 18;
-  else score += 8;
+  /* ===============================
+     🔢 HELPERS
+  =============================== */
+  const toNum = v => isFinite(+v) ? +v : NaN;
 
-  // 🔹 MOM OI % (RELAXED)
-  if (momOIChange >= 50) score += 30;
-  else if (momOIChange >= 35) score += 26;
-  else if (momOIChange >= 20) score += 22;
-  else if (momOIChange >= 10) score += 14;
-  else score += 6;
+  function formatIndian(num) {
+    if (!isFinite(num)) return "-";
+    const s = num.toString();
+    const last3 = s.slice(-3);
+    const rest = s.slice(0, -3);
+    const formatted =
+      rest ? rest.replace(/\B(?=(\d{2})+(?!\d))/g, ",") + "," + last3 : last3;
+    return num >= 1e7
+      ? `${formatted} (${(num / 1e7).toFixed(2)} Cr)`
+      : num >= 1e5
+        ? `${formatted} (${(num / 1e5).toFixed(2)} Lac)`
+        : formatted;
+  }
 
-  // 🔹 Price score placeholder (neutral carry-friendly)
-  score += 14;
+  /* ===============================
+     📦 BUILD MONTH ROWS
+  =============================== */
+  const months = Object.keys(data).filter(k => /_[0-9]{2}$/.test(k));
+  const rows = [];
+  let maxOI = 0;
 
-  // 🔹 Continuity
-  score += continuityScore;
+  for (let i = 0; i < months.length - 1; i++) {
+    const oiB = toNum(data[months[i + 1]]);
+    if (isFinite(oiB)) maxOI = Math.max(maxOI, oiB);
+    rows.push({ label: `${months[i]} → ${months[i + 1]}`, oiB });
+  }
 
-  // ---------- Grade Mapping (RELAXED CUTS)
-  let grade = "C";
-  let gradeColor = "color:#ff5252; font-size:28px; font-weight:900;";
+  rows.push({ label: "Tod_25 → Tod_25", oiB: todayOI });
+  maxOI = Math.max(maxOI, todayOI || 0);
 
-  if (score >= 88) { grade = "A+++"; gradeColor = "color:#00E676; font-size:30px; font-weight:900;"; }
-  else if (score >= 78) { grade = "A++"; gradeColor = "color:#1DE9B6; font-size:30px; font-weight:900;"; }
-  else if (score >= 68) { grade = "A+"; gradeColor = "color:#64FFDA; font-size:28px; font-weight:900;"; }
-  else if (score >= 58) { grade = "A"; gradeColor = "color:#FFD54F; font-size:26px; font-weight:900;"; }
-  else if (score >= 48) { grade = "B"; gradeColor = "color:#FFB74D; font-size:24px; font-weight:900;"; }
+  /* ===============================
+     🏆 GRADING
+  =============================== */
+  let rolloverGradeInfo = null;
+  try {
+    const prev = rows.at(-2).oiB || 0;
+    const curr = rows.at(-1).oiB || 0;
+    const ratio = prev > 0 ? curr / prev : 0;
+    const mom = prev > 0 ? ((curr - prev) / prev) * 100 : 0;
 
-  // ---------- Verdict
-  let verdict = "AVOID / NO INSTITUTIONAL INTEREST";
-  if (grade === "A+++") verdict = "INSTITUTIONAL CONVICTION (PRIMARY FOCUS)";
-  else if (grade === "A++") verdict = "STRONG POSITIONAL ROLLOVER";
-  else if (grade === "A+") verdict = "TRADEABLE WITH CHART CONFIRMATION";
-  else if (grade === "A") verdict = "CONDITIONAL / SWING FRIENDLY";
-  else if (grade === "B") verdict = "MAINTENANCE / NEUTRAL ROLLOVER";
+    let score = 14;
+    if (ratio >= 1.4) score += 35;
+    else if (ratio >= 1.25) score += 30;
+    else if (ratio >= 1.1) score += 25;
+    else score += 8;
 
-  // ---------- Final Console Block
-  console.log("\n");
+    if (mom >= 50) score += 30;
+    else if (mom >= 20) score += 22;
+    else score += 6;
+
+    let grade = "C", color = COLORS.gradeC, verdict = "AVOID";
+    if (score >= 88) { grade = "A+++"; color = COLORS.gradeAPlusPlusPlus; verdict = "INSTITUTIONAL CONVICTION"; }
+    else if (score >= 78) { grade = "A++"; color = COLORS.gradeAPlusPlus; verdict = "STRONG POSITIONAL ROLLOVER"; }
+    else if (score >= 68) { grade = "A+"; color = COLORS.gradeAPlus; verdict = "TRADEABLE"; }
+    else if (score >= 58) { grade = "A"; color = COLORS.gradeA; verdict = "SWING FRIENDLY"; }
+    else if (score >= 48) { grade = "B"; color = COLORS.gradeB; verdict = "NEUTRAL"; }
+
+    rolloverGradeInfo = { grade, score, verdict, color };
+  } catch {}
+
+  /* ===============================
+     🖨️ HEADER
+  =============================== */
+  console.clear();
   console.log(
-    `%c📊 ROLLOVER GRADE SUMMARY`,
-    "color:#b388ff; font-size:24px; font-weight:900;"
+    `%c${symbol}%c :::::: %cRollover Analyzer`,
+    `color:${COLORS.titleSymbol}; font-size:26px; font-weight:900;`,
+    `color:${COLORS.titleSep}; font-size:18px;`,
+    `color:${COLORS.titleName}; font-size:22px; font-weight:bold;`
   );
 
-  console.log(
-    `%cGrade: %c${grade}   %c(Score: ${score.toFixed(1)} / 100)`,
-    "color:#9aa0a6; font-size:18px; font-weight:bold;",
-    gradeColor,
-    "color:#9aa0a6; font-size:16px;"
-  );
+  /* ===============================
+     📊 PRINT ROWS (SAFE %c)
+  =============================== */
+  rows.forEach((row, i) => {
+    const isLast = i === rows.length - 1;
+    const isSecondLast = i === rows.length - 2;
 
-  console.log(
-    `%cRollover Ratio: %c${rolloverRatio.toFixed(2)}   %c| MOM OI: ${momOIChange.toFixed(2)}%`,
-    "color:#9aa0a6; font-size:16px;",
-    "color:#ffffff; font-weight:bold;",
-    "color:#9aa0a6; font-size:16px;"
-  );
+    const barLen = Math.round((row.oiB / maxOI) * 80);
+    const bar = "█".repeat(barLen) + " ".repeat(80 - barLen);
 
-  console.log(
-    `%cVerdict: %c${verdict}`,
-    "color:#9aa0a6; font-size:18px;",
-    "color:#ffffff; font-size:18px; font-weight:bold;"
-  );
+    let dir = "flat";
+    let pct = "";
+    if (isLast) {
+      const prev = rows.at(-2).oiB;
+      const diff = prev ? ((row.oiB - prev) / prev) * 100 : 0;
+      dir = diff > 0 ? "up" : diff < 0 ? "down" : "flat";
+      pct = `${diff > 0 ? "+" : ""}${diff.toFixed(2)}%`;
+    }
 
-} catch (e) {
-  console.warn("⚠️ Rollover grading skipped due to data issue", e);
+    const dirColor = COLORS[dir] || COLORS.flat;
+
+    const pctColor =
+      dir === "up"   ? COLORS.pctUp :
+      dir === "down" ? COLORS.pctDown :
+                      COLORS.pctFlat;
+
+    const parts = [];
+    const styles = [];
+
+    parts.push(`%c${row.label.padEnd(14)} | `);
+    styles.push(`color:${isLast ? dirColor : isSecondLast ? COLORS.flat : COLORS.muted}; font-weight:bold;`);
+
+    parts.push(`%c${bar}   `);
+    styles.push(`color:${isLast ? dirColor : isSecondLast ? COLORS.flat : COLORS.historyBar};`);
+
+    parts.push(`%c:::   `);
+    styles.push(`color:${COLORS.dots};`);
+
+    parts.push(`%c${formatIndian(row.oiB)}  `);
+    styles.push(`color:${isLast ? dirColor : isSecondLast ? COLORS.flat : COLORS.historyBar}; font-weight:bold;`);
+
+    parts.push(`%c${isSecondLast ? "(Rolled over to this month)" : isLast ? "(Current OI)  " : ""} `);
+    styles.push(`color:${COLORS.note};`);
+
+    if (isLast) {
+      parts.push(`%c${pct} `);
+      styles.push(`color:${pctColor}; font-size:22px; font-weight:bold;`);
+    }
+
+    if (isLast && rolloverGradeInfo) {
+      parts.push(`%c Grade: %c${rolloverGradeInfo.grade}     %c${rolloverGradeInfo.score}/100 %c      ${rolloverGradeInfo.verdict}`);
+      styles.push(`color:${COLORS.muted}; font-size:18px;`);
+      styles.push(`color:${rolloverGradeInfo.color}; font-size:26px; font-weight:bold;`);
+      styles.push(`color:${COLORS.flat}; font-size:18px; font-weight:bold;`);
+      styles.push(`color:${dirColor}; font-weight:bold;  font-size:18px; font-weight:bold;`);
+    }
+
+    console.log(parts.join(""), ...styles);
+  });
 }
-
-
-
-  }
 
 
   // ==================================================================================
