@@ -315,10 +315,7 @@
     styles.push(`color:${COLORS.dots};`);
 
     parts.push(`%c${formatIndian(row.oiB)}  `);
-    styles.push(`color:${isLast ? dirColor : isSecondLast ? COLORS.flat : COLORS.historyBar}; font-weight:bold;`);
-
-    parts.push(`%c${isSecondLast ? "(Rolled over to this month)" : isLast ? "(Current OI)  " : ""} `);
-    styles.push(`color:${COLORS.note};`);
+    styles.push(`color:${isLast ? dirColor : isSecondLast ? COLORS.flat : COLORS.muted}; font-weight:bold;`);
 
     if (pct) {
       parts.push(`%c${pct} `);
@@ -329,6 +326,11 @@
       );
     }
 
+
+    parts.push(`%c${isSecondLast ? "(Rolled over to this month)" : isLast ? "(Current OI)  " : ""} `);
+    styles.push(`color:${COLORS.note};`);
+
+    
 
     if (isLast && rolloverGradeInfo) {
       parts.push(`%c Grade: %c${rolloverGradeInfo.grade}     %c${rolloverGradeInfo.score}/100 %c      ${rolloverGradeInfo.verdict}`);
